@@ -1,6 +1,6 @@
 "use client";
 import Gnb from "@/app/_component/gnb/Gnb";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Controller from "@/app/_component/controller/Controller";
 
 import { Category, CategoryWithCheck } from "@/model/Categories";
@@ -10,7 +10,7 @@ import CategoryList from "./CategoryList";
 export default function CategoryContainer() {
   const key = "카테고리";
   const initialCategories = JSON.parse(localStorage.getItem(key) || "[]");
-
+  const checkRef = useRef<HTMLInputElement>(null);
   // const localData = localStorage.getItem("카테고리");
   // if (localData !== null) {
   //   JSON.parse(localData);
@@ -26,6 +26,7 @@ export default function CategoryContainer() {
   // 카테고리 모달에서 추가하고 업데이트가 돼야함. 리액트에서 알 수 있게 셋을 해줘야함.
   // 그래서 두번 사용해줘야돼 이걸
   //  모달은 값을 추가 + check 속성 포함 생성이고 , 컨테이너는 단순 초기값임
+  const [isAllCheck, setIsAllCheck] = useState<boolean>(false);
   const [categories, setCategories] =
     useState<CategoryWithCheck[]>(categoriesWithCheck);
   console.log("categories", categories);
@@ -59,7 +60,13 @@ export default function CategoryContainer() {
         onAllDEL={onAllDEL}
       />
 
-      <CategoryList categories={categories} setCategories={setCategories} />
+      <CategoryList
+        categories={categories}
+        setCategories={setCategories}
+        isAllCheck={isAllCheck}
+        setIsAllCheck={setIsAllCheck}
+        ref={checkRef}
+      />
       <CategoryModal
         setCategories={setCategories}
         isModal={isModal}
