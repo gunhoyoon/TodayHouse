@@ -2,12 +2,15 @@
 import React, { FormEventHandler, useEffect, useRef, useState } from "react";
 import { ChangeEventHandler } from "react";
 import styles from "./controller.module.css";
+import { CategoryWithCheck } from "@/model/Categories";
 
 type Props = {
   onSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onAdd: () => void;
   onSelectDEL: () => void;
   onAllDEL: () => void;
+  isAllCheck: boolean;
+  setCategories: (category: CategoryWithCheck[]) => void;
 };
 
 export default function Controller({
@@ -15,6 +18,8 @@ export default function Controller({
   onAdd,
   onSelectDEL,
   onAllDEL,
+  isAllCheck,
+  setCategories,
 }: Props) {
   return (
     <>

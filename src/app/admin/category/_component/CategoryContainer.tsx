@@ -6,11 +6,13 @@ import Controller from "@/app/_component/controller/Controller";
 import { Category, CategoryWithCheck } from "@/model/Categories";
 import CategoryModal from "./CategoryModal";
 import CategoryList from "./CategoryList";
+import useDebounce from "@/hook/useDebounce";
 
 export default function CategoryContainer() {
   const key = "카테고리";
   const initialCategories = JSON.parse(localStorage.getItem(key) || "[]");
   const checkRef = useRef<HTMLInputElement>(null);
+  // const [searchTerm, setSearchTerm] = useState("");
   // const localData = localStorage.getItem("카테고리");
   // if (localData !== null) {
   //   JSON.parse(localData);
@@ -20,31 +22,93 @@ export default function CategoryContainer() {
     ...category,
     checked: false,
   }));
-  // console.log("initialCategories", initialCategories);
-
-  // category 상태를 여기서 가지고 있음. 즉 초기값을 여기서 넣어줘야하는데.
-  // 카테고리 모달에서 추가하고 업데이트가 돼야함. 리액트에서 알 수 있게 셋을 해줘야함.
-  // 그래서 두번 사용해줘야돼 이걸
-  //  모달은 값을 추가 + check 속성 포함 생성이고 , 컨테이너는 단순 초기값임
   const [isAllCheck, setIsAllCheck] = useState<boolean>(false);
   const [categories, setCategories] =
     useState<CategoryWithCheck[]>(categoriesWithCheck);
+
   console.log("categories", categories);
   const [isAddModal, setIsAddModal] = useState(false);
   const [isModal, setIsModal] = useState(false);
 
-  //   console.log("categories", categories);
+  // const searchHandler = (searchTerm: string) => {
+  //   const debouncedKeyword = useDebounce(searchTerm, 500);
+
+  // onSearch 이벤트 핸들러 내부에서 hook을 사용하지 못하는 규칙
   const onSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.target.value;
-    // 카테고리 순회, e.target.value 일치하는거만 목록 보여주기
-    // 여기서 목록을 가지고 있어야 내려주든 하겠지 비교해서
+    const searchTerm = e.target.value;
+    // setSearchTerm(searchTerm);
+
+    const filteredCategories = initialCategories.filter((category: Category) =>
+      category.name.includes(searchTerm)
+    );
+
+    setCategories(filteredCategories);
+    // if (searchTerm === "") {
+    //   setCategories(initialCategories); // 전체 리스트로 초기화
+    // } else {
+    //   const searchData = categories.filter(
+    //     (category: CategoryWithCheck) => category.name === searchTerm
+    //   );
+    //   setCategories(searchData);
+    // }
+    // useDebounce(searchTerm);
+    // console.log("debouncedKeyword", debouncedKeyword);
+    // if (debouncedKeyword === "") {
+    //   setCategories(initialCategories); // 전체 리스트로 초기화
+    // } else {
+    //   const searchData = categories.filter(
+    //     (category: CategoryWithCheck) => category.name === debouncedKeyword
+    //   );
+
+    //   setCategories(searchData);
+    // }
+
+    // useEffect(() => {
+    //   const searchData = [...categories];
+    //   const searchData2 = searchData.filter(
+    //     (category: CategoryWithCheck) => category.name === searchTerm
+    //   );
+    //   // 조건을 통과하는 아이템을 새 배열로 담는다.
+    //   // console.log("searchData2", searchData2);
+    //   setCategories(searchData2);
+    // }, [searchTerm]);
+
+    // 검색어가 비어있으면,
+
+    // 검색하는 필터링은 삭제가 아님. 검색한 후 다시 전체 리스트를 보여주는건 검색 이전의 원본을 보여주는것과 같음
+    // 잠깐만 여기서 검색한걸 복사본을 필터를 해. 그럼 검색된 카테고리 데이터가 나오겠지.
+    // 그걸 CategoryList로 어떻게 전달을 해야할까?
+    // 디바운싱 ? 첫 입력 시에 바로 필터링이 되어버리면 검색 자체를 막을 순 없을거같은데,
+    // 그럼 완성된 단어를 보내면서 즉 onSubmit 시에 실행이 되게하는건?
+    // 일단 이 부분 고민해보자 . 여기부터 하면 됨
   };
   const onAdd = () => {
     setIsModal(true);
   };
 
-  const onSelectDEL = () => {};
-  const onAllDEL = () => {};
+  const onSelectDEL = () => {
+    const selectDEL = categories.filter(
+      (category: CategoryWithCheck) => category.checked !== true
+    );
+    localStorage.setItem(key, JSON.stringify(selectDEL));
+    // 스트링인채로 내가 가지고 있으니까, JSON으로만 만들어주면 됨. 제발 능동적으로 생각하자
+    setCategories(selectDEL);
+  };
+  const onAllDEL = () => {
+    const isAllCheck = categories.every(
+      (category: CategoryWithCheck) => category.checked === true
+    );
+    if (isAllCheck) {
+      const allDEL = categories.filter(
+        (category: CategoryWithCheck) => !category.checked
+      );
+      localStorage.setItem(key, JSON.stringify(allDEL));
+      setCategories(allDEL);
+    } else {
+      alert("전체 카테고리가 선택되지 않았습니다.");
+    }
+  };
+
   const onClose = () => {
     setIsModal(false);
     setIsAddModal(false);
@@ -54,10 +118,12 @@ export default function CategoryContainer() {
     <>
       <Gnb />
       <Controller
+        isAllCheck={isAllCheck}
         onSearch={onSearch}
         onAdd={onAdd}
         onSelectDEL={onSelectDEL}
         onAllDEL={onAllDEL}
+        setCategories={setCategories}
       />
 
       <CategoryList
