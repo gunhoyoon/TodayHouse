@@ -52,6 +52,7 @@ const CategoryModal = ({ isModal, onClose, setCategories }: Props) => {
         checked: false,
       }));
       setCategories(categoriesWithCheck);
+      // 아 로컬에서 처음 받아서 업데이트해줄 때 상태 업데이트 해줄 때
 
       // 입력 필드 초기화
       setInputValue("");

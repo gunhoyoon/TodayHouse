@@ -1,0 +1,16 @@
+.formContainer {
+  border: 1px solid black;
+  width: 400px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+/* .formHeader button {
+  padding: 8px 12px;
+} */

@@ -9,8 +9,6 @@ type Props = {
   onAdd: () => void;
   onSelectDEL: () => void;
   onAllDEL: () => void;
-  isAllCheck: boolean;
-  setCategories: (category: CategoryWithCheck[]) => void;
 };
 
 export default function Controller({
@@ -18,8 +16,6 @@ export default function Controller({
   onAdd,
   onSelectDEL,
   onAllDEL,
-  isAllCheck,
-  setCategories,
 }: Props) {
   return (
     <>

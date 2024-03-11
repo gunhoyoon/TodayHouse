@@ -22,6 +22,7 @@ export default function CategoryContainer() {
     ...category,
     checked: false,
   }));
+  // 여기선 json 데이터 다시 불러오니까 초기값 넣어줄 용으로 checked 사용
   const [isAllCheck, setIsAllCheck] = useState<boolean>(false);
   const [categories, setCategories] =
     useState<CategoryWithCheck[]>(categoriesWithCheck);
@@ -43,14 +44,16 @@ export default function CategoryContainer() {
     );
 
     setCategories(filteredCategories);
+
     // if (searchTerm === "") {
     //   setCategories(initialCategories); // 전체 리스트로 초기화
     // } else {
-    //   const searchData = categories.filter(
-    //     (category: CategoryWithCheck) => category.name === searchTerm
+    //   const searchData = categories.filter((category: CategoryWithCheck) =>
+    //     category.name.includes(searchTerm)
     //   );
     //   setCategories(searchData);
-    // }
+    // } // 와  ... 초기값이 아니라 실제 데이터를 필터링하고 있구나 나 .... 미친놈인가
+
     // useDebounce(searchTerm);
     // console.log("debouncedKeyword", debouncedKeyword);
     // if (debouncedKeyword === "") {
@@ -90,7 +93,11 @@ export default function CategoryContainer() {
     const selectDEL = categories.filter(
       (category: CategoryWithCheck) => category.checked !== true
     );
-    localStorage.setItem(key, JSON.stringify(selectDEL));
+    // 로컬에 있는 checked를 가지고 업데이트하는게 아니라, 상태로 관리하는 checked 로 필터링해서 체크아닌것만 로컬에 남기는거
+    // const selectDELData = selectDEL.map((category: Category) => category.name);
+    // categories를 필터링하고 남은 데이터에서 checked 속성을 빼고 name만 넘겨주기 위해서
+    const selectDELData = selectDEL.map(({ name }) => ({ name }));
+    localStorage.setItem(key, JSON.stringify(selectDELData));
     // 스트링인채로 내가 가지고 있으니까, JSON으로만 만들어주면 됨. 제발 능동적으로 생각하자
     setCategories(selectDEL);
   };
@@ -118,12 +125,10 @@ export default function CategoryContainer() {
     <>
       <Gnb />
       <Controller
-        isAllCheck={isAllCheck}
         onSearch={onSearch}
         onAdd={onAdd}
         onSelectDEL={onSelectDEL}
         onAllDEL={onAllDEL}
-        setCategories={setCategories}
       />
 
       <CategoryList
