@@ -1,12 +1,12 @@
 "use client";
 import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 // import styles from "./categoryList.module.css";
-import { CategoryWithCheck } from "@/model/Categories";
+import { CategoryWithCheckId } from "@/model/Categories";
 import { collectGenerateParams } from "next/dist/build/utils";
 
 type Props = {
-  setCategories: (categories: CategoryWithCheck[]) => void;
-  categories: CategoryWithCheck[];
+  setCategories: (categories: CategoryWithCheckId[]) => void;
+  categories: CategoryWithCheckId[];
   isAllCheck: boolean;
   setIsAllCheck: (isAllCheck: boolean) => void;
   ref: React.RefObject<HTMLInputElement>;
@@ -19,7 +19,7 @@ const CategoryList = forwardRef(
   ) => {
     // 카테고리 배열. 인덱스 -> .checked 속성 접근 -> 변경.
     // console.log("isAllCheck", isAllCheck);
-
+    // console.log("categories", categories);
     const onChange = (index: number) => {
       const updatedCategories = [...categories];
       updatedCategories[index].checked = !updatedCategories[index].checked;
@@ -28,7 +28,7 @@ const CategoryList = forwardRef(
       // 그리고 상태ㅔ 업데이트 근데 이 업데이트 되는 과정이 좀늦어, 즉 업데이트 되기 전의 상태로 some 체크?
 
       const isAnyCategoryNotChecked = categories.some(
-        (category: CategoryWithCheck) => category.checked === false
+        (category: CategoryWithCheckId) => category.checked === false
       );
       // 업데이트 됐어. 그 배열에서 check가 하나라도 false냐 ? false면 전체 선택 false,
       // 아니고 전체 다 선택됐냐 하면 isAllCheck true 값 업데이트
@@ -62,7 +62,7 @@ const CategoryList = forwardRef(
       // 근데 여기서 중요한건 값을 업데이트하기전의 값을 가지고 함수 도는거임
 
       allCheckCategories.forEach(
-        (category: CategoryWithCheck) => (category.checked = !isAllCheck)
+        (category: CategoryWithCheckId) => (category.checked = !isAllCheck)
       );
       // 실제 값이 업데이트 되는건 여기임
       // 그럼 isAllCheck와 같은 로직을 값이 업데이트 된 아래에서 작성하면, 바뀐 값으로 찍히겠지? 업데이트해줬으니까 64라인에서

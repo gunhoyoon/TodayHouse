@@ -26,6 +26,7 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
     let storedProducts: Product[] = JSON.parse(
       localStorage.getItem(key) || "[]"
     );
+
     // 값이 있으면 가져오고 없으면 빈배열
     // 상품 이름 중복,공백 제거
     const newProductName = productInput.name.trim();
@@ -130,10 +131,12 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
   );
 }
 
-// 모달이 2가지 유형인데, 하나는 추가, 하나는 수정. 이건 기존 카테고리 데이터가 있냐 없냐에 따른거같은데
-// 아 아니면 어차피 추가버튼하고 수정하기 버튼하고 다르니까. 수정하기 버튼은 있는 데이터를 넣어줌.
+// // 이건 수정도 있음 +
 
-// 카테고리
-// 상품이름
-// 가격
-// 상품 소개
+// // 모달이 2가지 유형인데, 하나는 추가, 하나는 수정. 이건 기존 카테고리 데이터가 있냐 없냐에 따른거같은데
+// // 아 아니면 어차피 추가버튼하고 수정하기 버튼하고 다르니까. 수정하기 버튼은 있는 데이터를 넣어줌.
+
+// // 카테고리
+// // 상품이름
+// // 가격
+// // 상품 소개

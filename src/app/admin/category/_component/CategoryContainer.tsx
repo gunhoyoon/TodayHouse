@@ -3,31 +3,96 @@ import Gnb from "@/app/_component/gnb/Gnb";
 import React, { useEffect, useRef, useState } from "react";
 import Controller from "@/app/_component/controller/Controller";
 
-import { Category, CategoryWithCheck } from "@/model/Categories";
-import CategoryModal from "./CategoryModal";
+import { Category, CategoryWithCheckId } from "@/model/Categories";
 import CategoryList from "./CategoryList";
-import useDebounce from "@/hook/useDebounce";
-
-export default function CategoryContainer() {
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { getCategory } from "../_lib/getCategory";
+import CategoryModal from "./CategoryModal";
+import { response } from "express";
+const CategoryContainer = () => {
   const key = "카테고리";
-  const initialCategories = JSON.parse(localStorage.getItem(key) || "[]");
+  const [categories, setCategories] = useState<CategoryWithCheckId[]>([]);
+  const queryClient = useQueryClient();
   const checkRef = useRef<HTMLInputElement>(null);
+
+  // useEffect(() => {
+  //   const initialCategories = JSON.parse(localStorage.getItem(key) || "[]");
+  //   const categoriesWithCheck = initialCategories.map(
+  //     (category: Category, index: number) => ({
+  //       ...category,
+  //       checked: false,
+  //       id: index + 1,
+  //     })
+  //   );
+
+  //   setCategories(categoriesWithCheck);
+  // }, []);
+
+  // msw 받은 응답 Category[] 타입임 name 만 들어있으니까,
+  // 결국 useState를 사용해야하는 이유. 로컬 데이터(msw 핸들러에서 응답해주는 데이터 타입) , 클라이언트에서 상태로 사용하는 데이터(id+ checked)추가된 타입이랑 달라서
+  const { data } = useQuery<Category[]>({
+    queryKey: ["admin", "category"],
+    queryFn: getCategory,
+    staleTime: 60 * 1000,
+    gcTime: 300 * 1000,
+  });
+  console.log("data", data);
+  // [{name: string}]
+  // 데이터가 바뀔 떄마다 useEffect 의 의존성인 data 가 트리거 되면서, category 상태를 업데이트한다.
+  useEffect(() => {
+    // useQuery로부터 가져온 데이터에 기반해서 상태를 업데이트합니다.
+    if (data) {
+      const categoriesWithCheckId = data.map((category) => ({
+        ...category,
+        checked: false, // 기본적으로 모든 카테고리를 unchecked 상태로 설정합니다.
+        // 리스트마다 고유의 아이디가 있을텐데, checked가 true인 친구의 id를 delete로 보낸다?
+      }));
+      setCategories(categoriesWithCheckId);
+      // 셋 업데이트 무한 루프 방지 useEffect
+    }
+  }, [data]);
+  // useEffect(() => {
+  //   const initialCategories = JSON.parse(localStorage.getItem(key) || "[]");
+  //   const categoriesWithCheck = initialCategories.map((category: Category) => ({
+  //     ...category,
+  //     checked: false,
+  //   }));
+  //   setCategories(categoriesWithCheck);
+  // }, []);
+
   // const [searchTerm, setSearchTerm] = useState("");
   // const localData = localStorage.getItem("카테고리");
   // if (localData !== null) {
   //   JSON.parse(localData);
   // }
+  // msw 추가 +
+  // msw 추가 +
+  // msw 추가 +
+  // msw 추가 + react query
 
-  const categoriesWithCheck = initialCategories.map((category: Category) => ({
-    ...category,
-    checked: false,
-  }));
+  function deepCopy<T>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
+  }
   // 여기선 json 데이터 다시 불러오니까 초기값 넣어줄 용으로 checked 사용
   const [isAllCheck, setIsAllCheck] = useState<boolean>(false);
-  const [categories, setCategories] =
-    useState<CategoryWithCheck[]>(categoriesWithCheck);
 
-  console.log("categories", categories);
+  const origin = deepCopy(categories);
+  // const [originCategories, setOriginCategories] =
+  //   useState<CategoryWithCheckId[]>(categoriesWithCheck); // 서버상태용,
+
+  // 추가시 오리진 데이터 변경, 오리진 데이터 변경 시 카테고리도 변경 사항이 있고 적용해줘야함
+  // useEffect(() => {
+  //   setCategories(deepCopy(originCategories));
+  // }, [originCategories]);
+  // 지금은 오리진이 바뀌었을 때 셋 카테고리 업데이트 해주는 과정
+  // 로컬이 바뀌었을 때 오리진 업데이트를 해줘야함, 추가하는 과정
+
+  // console.log("categories", categories);
   const [isAddModal, setIsAddModal] = useState(false);
   const [isModal, setIsModal] = useState(false);
 
@@ -38,12 +103,13 @@ export default function CategoryContainer() {
   const onSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     // setSearchTerm(searchTerm);
-
-    const filteredCategories = initialCategories.filter((category: Category) =>
+    const copyData = deepCopy(origin); // 매번 검색 시 딥카피해옴
+    const filteredCategories = copyData.filter((category: Category) =>
       category.name.includes(searchTerm)
     );
-
+    // 딥카피,
     setCategories(filteredCategories);
+    // 서치 할 때, 필터링하고 해당 데이터를 . 아 이것도 다 뮤테이트로 해줘야되는구나.
 
     // if (searchTerm === "") {
     //   setCategories(initialCategories); // 전체 리스트로 초기화
@@ -52,6 +118,7 @@ export default function CategoryContainer() {
     //     category.name.includes(searchTerm)
     //   );
     //   setCategories(searchData);
+    // }
     // } // 와  ... 초기값이 아니라 실제 데이터를 필터링하고 있구나 나 .... 미친놈인가
 
     // useDebounce(searchTerm);
@@ -88,26 +155,56 @@ export default function CategoryContainer() {
   const onAdd = () => {
     setIsModal(true);
   };
+  const remove = useMutation({
+    mutationFn: async (categories: CategoryWithCheckId[]) => {
+      const ids = categories.map((category) => category.id).join(",");
+
+      console.log("ids", ids);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/category?ids=${ids}`,
+        // 선택 삭제든 전체 삭제든 하나로 처리할거임, 데이터 타입은 동일
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("SuccessData", data);
+      localStorage.setItem(key, JSON.stringify(data));
+
+      queryClient.invalidateQueries({ queryKey: ["admin", "category"] });
+      // 카테고리에 셋 해줘야힘?
+
+      // 삭제하고 남은 데이터 돌려받아서 set해주기
+    },
+  });
 
   const onSelectDEL = () => {
     const selectDEL = categories.filter(
-      (category: CategoryWithCheck) => category.checked !== true
+      (category: CategoryWithCheckId) => category.checked === true
     );
-    // 로컬에 있는 checked를 가지고 업데이트하는게 아니라, 상태로 관리하는 checked 로 필터링해서 체크아닌것만 로컬에 남기는거
-    // const selectDELData = selectDEL.map((category: Category) => category.name);
-    // categories를 필터링하고 남은 데이터에서 checked 속성을 빼고 name만 넘겨주기 위해서
-    const selectDELData = selectDEL.map(({ name }) => ({ name }));
-    localStorage.setItem(key, JSON.stringify(selectDELData));
+    // 체크된 친구 통째로 그냥 전달해줘.
+
+    // console.log("selectDEL", selectDEL);
+    // localStorage.setItem(key, JSON.stringify(selectDELData));
+
     // 스트링인채로 내가 가지고 있으니까, JSON으로만 만들어주면 됨. 제발 능동적으로 생각하자
-    setCategories(selectDEL);
+    // setCategories(selectDEL);
+
+    remove.mutate(selectDEL);
   };
+
   const onAllDEL = () => {
     const isAllCheck = categories.every(
-      (category: CategoryWithCheck) => category.checked === true
+      (category: CategoryWithCheckId) => category.checked === true
     );
     if (isAllCheck) {
       const allDEL = categories.filter(
-        (category: CategoryWithCheck) => !category.checked
+        (category: CategoryWithCheckId) => !category.checked
       );
       localStorage.setItem(key, JSON.stringify(allDEL));
       setCategories(allDEL);
@@ -145,8 +242,8 @@ export default function CategoryContainer() {
       />
     </>
   );
-}
-
+};
+export default CategoryContainer;
 // 카테고리는 {name : "string'"}, 그리고 리스트에서 맵 돌면서 체크박스를 붙여주냐 ?
 // 근데 이건 하나의 리스트 안에 있을건데, li를 어떻게 삭제햐나
 

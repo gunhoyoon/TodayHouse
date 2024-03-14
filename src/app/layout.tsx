@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "./layout/header/Header";
+import MSWComponent from "./_component/MSWComponent";
+import RQProvider from "./_component/RQProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,8 +17,9 @@ export default function RootLayout({ children }: Props) {
   return (
     <html lang="en">
       <body>
+        <MSWComponent />
         <Header />
-        {children}
+        <RQProvider>{children}</RQProvider>
       </body>
     </html>
   );

@@ -5,6 +5,9 @@ import React, { useEffect, useState } from "react";
 import ProductList from "./ProductList";
 import ProductModal from "./ProductModal";
 import { Product, ProductWithCheck } from "@/model/Products";
+import { useQuery } from "@tanstack/react-query";
+import { getCategory } from "../../category/_lib/getCategory";
+import { Category } from "@/model/Categories";
 
 export default function ProductContainer() {
   const key = "상품";
@@ -15,6 +18,20 @@ export default function ProductContainer() {
     checked: false,
   }));
   // 로컬에 체크묻은거
+
+  const { data } = useQuery<Category[]>({
+    queryKey: ["admin", "category"],
+    queryFn: getCategory,
+    staleTime: 60 * 1000,
+    gcTime: 300 * 1000,
+  });
+  console.log("data", data);
+  // 빈배열을 가져와야해 넌 제발 부탁이야
+  // 자 카테고리 페이지에 접근 시 카테고리에 관한 데이터를 가져오게 했고, 앱이 재 시작된 상태에서 프로덕트 페이지에서
+  // 처음 카테고리 요청을 하면 당연히 [] 반환, 왜냐? 카테고리 페이지에 접근을 안한 상태라 데이터도 없음
+  // 근데 여기서 카테고리 탭으로 넘어간다면(페이지 전환) 그러면 그 때 요청해서 불러와야겠지
+  // 그래서 초기 데이터를 불러오는 Init 에서 쿼리를 무효화 시켜서 다시 받아오게 하는거임
+
   const [product, setProduct] = useState<ProductWithCheck[]>(productsWithCheck);
   const [isOpen, setIsOpen] = useState(false);
   console.log("product", product);

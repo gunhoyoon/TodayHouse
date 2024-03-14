@@ -1,64 +1,76 @@
 "use client";
 import React, {
   ChangeEventHandler,
+  FormEvent,
   FormEventHandler,
   useEffect,
   useRef,
   useState,
 } from "react";
 import styles from "./categoryModal.module.css";
-import { Category, CategoryWithCheck } from "@/model/Categories";
+import { Category, CategoryWithCheckId } from "@/model/Categories";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
   isModal: boolean;
   onClose: () => void;
-  setCategories: (category: CategoryWithCheck[]) => void;
+  setCategories: (category: CategoryWithCheckId[]) => void;
 };
 
 const CategoryModal = ({ isModal, onClose, setCategories }: Props) => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const key = "카테고리";
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (isModal) {
       inputRef.current?.focus();
     }
   }, [isModal]);
+  // 공백추가시
+  // 추가
+  const submit = useMutation({
+    mutationFn: async (inputValue: string) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/category`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: inputValue }),
+        }
+      );
+      return response.json();
+    },
+    // 포스트 요청시 id를 생성해서 같이 넘겨주고, 핸들러에서 아이디를 받게 하려고 했지만
+    // 보안상의 이유로 서버에서 id를 생성하는 것이 맞음
+
+    onSuccess: (inputValue: Category) => {
+      localStorage.setItem(key, JSON.stringify(inputValue));
+      alert("카테고리가 성공적으로 추가되었습니다!");
+      queryClient.invalidateQueries({ queryKey: ["admin", "category"] });
+    },
+    onError(error) {
+      console.error(error);
+      alert("이미 존재하는 카테고리입니다");
+    },
+  });
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    const key = "카테고리";
-    // 카테고리로 가져온 key값이 있으면 파싱 없으면 빈 배열
-    let storedCategories: Category[] = JSON.parse(
-      localStorage.getItem(key) || "[]"
-    );
-    //trim 문자열의 중복, 공백 제거 / 원본 수정 X
-    const newCategoryValue = inputValue.trim();
-    // 값이 있고, 기존 카테고리에 같은 값이 없으면.
-    if (
-      newCategoryValue &&
-      !storedCategories.some((category) => category.name === newCategoryValue)
-    ) {
-      const newCategory = {
-        name: newCategoryValue,
-      };
-      storedCategories.push(newCategory);
-      localStorage.setItem(key, JSON.stringify(storedCategories));
-      // 처음 생성할 떄 네임,
-      const categoriesWithCheck = JSON.parse(
-        localStorage.getItem(key) || "[]"
-      ).map((category: Category) => ({
-        ...category,
-        checked: false,
-      }));
-      setCategories(categoriesWithCheck);
-      // 아 로컬에서 처음 받아서 업데이트해줄 때 상태 업데이트 해줄 때
-
-      // 입력 필드 초기화
-      setInputValue("");
+    setInputValue("");
+    // 입력 시 바로
+    const trimmedInput = inputValue.trim();
+    // console.log("trimmedInput", trimmedInput);
+    // 문자열에서 빈 문자열 있으면, 매번 트림,
+    if (trimmedInput) {
+      submit.mutate(trimmedInput);
+    } else {
+      alert("유효한 카테고리명을 입력해주세요");
     }
   };
-
+  // mutate.mutate()
   const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     setInputValue(e.target.value);
   };

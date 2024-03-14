@@ -17,6 +17,9 @@ export default function ProductList({ products }: Props) {
                 type="checkbox"
                 checked={product.checked}
                 onChange={() => {}}
+                // 체크시 t/f 토글
+                // false 된 상품  선택삭제 + 전체삭제
+                // 수정버튼
               />
               <p>카테고리 : {product.category}</p>
               <p>상품명 : {product.name}</p>
