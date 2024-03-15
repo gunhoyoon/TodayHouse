@@ -8,7 +8,7 @@ export default function CategoryInit() {
   useEffect(() => {
     const initData = localStorage.getItem(key) || "[]";
     // 로컬 데이터 있는 상태에서 앱 실행.
-    console.log("initData", initData);
+    // console.log("initData", initData);
     // 조건문에서
     if (initData) {
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/initCategory`, {

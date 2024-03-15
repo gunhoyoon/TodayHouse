@@ -175,11 +175,12 @@ const CategoryContainer = () => {
     onSuccess: (data) => {
       console.log("SuccessData", data);
       localStorage.setItem(key, JSON.stringify(data));
-
+      alert("삭제 성공");
       queryClient.invalidateQueries({ queryKey: ["admin", "category"] });
-      // 카테고리에 셋 해줘야힘?
-
-      // 삭제하고 남은 데이터 돌려받아서 set해주기
+    },
+    onError: (err) => {
+      console.error(err);
+      alert("삭제 실패");
     },
   });
 

@@ -1,104 +1,101 @@
 import { Category } from "@/model/Categories";
 import { http, HttpResponse } from "msw";
 import { v4 as uuid } from "uuid";
-// 핸들러에 전달될 땐 로컬에 있는 데이터 뿐만 아니라 checked + id 까지 같이 전달이 되어야함
-// 핸들러에서 직접 로컬에 접근하지 못하고, 전달받는 데이터를 가지고 응답하게 되니까, 문제 없어보임
-// 클라이언트에서의 삭제는 checked 를 기준으로 하고 msw쪽에서 삭제는 checked된  id로 하게 됨
 
+// 핸들러에 전달될 땐 로컬에 있는 데이터 뿐만 아니라 checked + id 까지 같이 전달이 되어야함
+
+// 클라이언트에서의 삭제는 checked 를 기준으로 하고 msw쪽에서 삭제는 checked된  id로 하게 됨
 // 그럼 추가할 때도 같이 보내야된다는건데, 로컬에 있는 데이터를 받아와서, checked + id 를 달아줘야하는건데
 // 아니지 checked랑 id 가지고 있을 필욘 없지
 
-// 추가할 때만 보면, 추가할 땐 name 하나 전달할거야. 그거 파싱해서 추가해주고, 성공하면 클라에서 로컬 업데이트 해줄거임
+// msw가 실행되면서 핸들러에서도 로컬 스토리지에 접근이 가능해짐
 
-let mockCategories: Category[] = [];
-console.log("msw 실행");
+// let mockCategories: Category[] = [];
+const key = "카테고리";
+// if문이 자꾸 실패하니까 else문으로 넘어가는데 , else문에 return(응답) 해주고 있는게 없어서, 404가 발생하는거였음
+// msw 로 실행된다고 해서 브라우저는 아니라는거같음
+// 노드 환경인지에 관한 조건문으로 현재 어디서 돌고 있는지 확인
+
 export const handlers = [
   http.get("/api/admin/category", () => {
-    try {
-      if (mockCategories.length === 0) {
-        return new HttpResponse(JSON.stringify([]), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } else {
-        return new HttpResponse(JSON.stringify(mockCategories), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }),
-  http.post("/api/admin/category", async ({ request }) => {
-    const newCategory = await request.json();
-    // console.log("시작하자마자 이게 돌긴함?");
-    // DefaultBodyType 타입의 데이터가 Category[] 타입으로 간주될 수 없다는 것을 나타냅니다.
-    // 즉, 여기서 DefaultBodyType은 서버에 전달된 요청의 본문(body) 타입을 의미합니다.
-    // 그래서 newCategory가 Category[] 타입이 되려면, 하나하나 다 검증 해줘야한다.
-    // console.log("newCategory", newCategory);
-    // console.log("mockCategories", mockCategories);
-    // CategoryWithCheckId 타입에 맞는지 확인
-    // 이 부분에서 id까지 같이 포함해서 전달해주는 방법
-    // 공백인지에 관한 조건은 클라이언트에서 애초에 입력하고 포스트할 때
-    const id = uuid();
-
-    if (
-      isCategory(newCategory) &&
-      !mockCategories.some(
-        (category: Category) => category.name === newCategory.name
-      )
-    ) {
-      // 하나라도 다른게 있으면 true 그럼 하나라도 같다면 false 일거아냐
-      // 근데 왜 안된다느거야? 아
-
-      console.log("if 통과");
-
-      const categoryWithId = { ...newCategory, id };
-      // console.log("categoryWithId", categoryWithId);
-      mockCategories.push(categoryWithId);
-      return new HttpResponse(JSON.stringify(mockCategories), {
+    // console.log(typeof window !== "undefined");
+    if ("document" in globalThis) {
+      console.log("이프문");
+      const localData = localStorage.getItem(key) || "[]";
+      console.log("localData", localData);
+      return new HttpResponse(localData, {
         status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
     } else {
-      // console.log("실패");
-    }
+      console.log("얼스");
+
+      return new HttpResponse("실패", {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } // 아 알았다... 404는 if가 실패했는데 else 에서 반환값이 없어서 그랬던거구나
   }),
+  // http.post("/api/admin/category", async ({ request }) => {
+  //   const newCategory = await request.json();
+  //   const id = uuid();
+  //   if (typeof window !== "undefined") {
+  //     const localData = localStorage.getItem(key);
+  //     if (isCategory(newCategory)) {
+  //     }
+  //   }
+  //   if (
+  //     isCategory(newCategory) &&
+  //     !mockCategories.some(
+  //       (category: Category) => category.name === newCategory.name
+  //     )
+  //   ) {
+  //     console.log("if 통과");
+
+  //     const categoryWithId = { ...newCategory, id };
+  //     mockCategories.push(categoryWithId);
+  //     return new HttpResponse(JSON.stringify(mockCategories), {
+  //       status: 200,
+  //     });
+  //   } else {
+  //     // console.log("실패");
+  //   }
+  // }),
   // 여기서 들어오는 초기 데이터는 id까지 같이 있는애임, initCateogry가 없을 쑤도 있잖아
-  http.post("/api/admin/initCategory", async ({ request }) => {
-    const initCategory = await request.json();
-    console.log("initCategory", initCategory);
-    if (!initCategory) {
-      mockCategories;
-    }
-    // 무조건 받으면 됨.
-    // console.log("상품 페이지에서 카테고리로 이동시 동작하니?");
-    // console.log(initCategory);
-    mockCategories = initCategory as Category[];
-    // console.log("mockCategories", mockCategories);
-    // if (isCategory(initCategory)) {
-    //   console.log("initCategory", initCategory);
-    //   mockCategories.push(initCategory);
-    //   console.log("mockCategories", mockCategories);
-    // } else {
-    //   console.log("실패");
-    // }
-  }),
-  http.delete(`/api/admin/category`, async ({ request }) => {
-    const url = new URL(request.url);
-    const categoryIds = url.searchParams.get("ids")?.split(",") || [];
-    const test = mockCategories.filter(
-      (category: Category) => !categoryIds.includes(category.id)
-    );
-    console.log("test", test);
-    return new HttpResponse(JSON.stringify(test), {
-      status: 200,
-    });
-  }),
+  // http.post("/api/admin/initCategory", async ({ request }) => {
+  //   const initCategory = await request.json();
+  //   console.log("initCategory", initCategory);
+  //   if (!initCategory) {
+  //     mockCategories;
+  //   }
+  //   // 무조건 받으면 됨.
+  //   // console.log("상품 페이지에서 카테고리로 이동시 동작하니?");
+  //   // console.log(initCategory);
+  //   mockCategories = initCategory as Category[];
+  //   // console.log("mockCategories", mockCategories);
+  //   // if (isCategory(initCategory)) {
+  //   //   console.log("initCategory", initCategory);
+  //   //   mockCategories.push(initCategory);
+  //   //   console.log("mockCategories", mockCategories);
+  //   // } else {
+  //   //   console.log("실패");
+  //   // }
+  // }),
+  // http.delete(`/api/admin/category`, async ({ request }) => {
+  //   const url = new URL(request.url);
+  //   const categoryIds = url.searchParams.get("ids")?.split(",") || [];
+  //   const test = mockCategories.filter(
+  //     (category: Category) => !categoryIds.includes(category.id)
+  //   );
+  //   console.log("test", test);
+  //   return new HttpResponse(JSON.stringify(test), {
+  //     status: 200,
+  //   });
+  // }),
 ];
 
 function isCategory(data: any): data is Category {

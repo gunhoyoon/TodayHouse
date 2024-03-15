@@ -1,4 +1,5 @@
 "use client";
+import { handlers } from "@/mocks/handler";
 import { useEffect } from "react";
 
 export default function MSWComponent() {
@@ -6,12 +7,28 @@ export default function MSWComponent() {
     if (typeof window !== "undefined") {
       // 윈도우가 있다는게 브라우저 환경이라는 뜻이니까 그 조건을 한번 거쳐서 사용
       if (process.env.NEXT_PUBLIC_API_MOCKING === "enabled") {
-        require("@/mocks/browser");
+        const msw = require("msw/browser");
+
+        setTimeout(() => {
+          msw.setupWorker(...handlers).start();
+        }, 1500);
       }
     }
   }, []);
+  // useEffect(() => {
+  //   if (
+  //     typeof window !== "undefined" &&
+  //     process.env.NEXT_PUBLIC_API_MOCKING === "enabled"
+  //   ) {
+  //     import("msw/browser").then((msw) => {
+  //       const worker = msw.setupWorker(...handlers);
+  //       worker.start();
+  //     });
+  //   }
+  // }, []);
   return null;
 }
+
 // 이 설정을 하고 layout에 임포트를 해주는거까지해야 요청을 가로채서 얘가 응답함
 
 // 근데 실제 배포할 땐 .env 사용할거고 해당 파일을 비워놓을거니까 msw 사용 x
