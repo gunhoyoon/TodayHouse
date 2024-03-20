@@ -1,6 +1,5 @@
 import React from "react";
 import CategoryContainer from "./_component/CategoryContainer";
-import CategoryInit from "./_component/CategoryInit";
 
 export default function CategoryPage() {
   // 컨테이너 하나 만들어서 상태 여기서 가지고 있고, 함수 프롭으로 searchArea , header

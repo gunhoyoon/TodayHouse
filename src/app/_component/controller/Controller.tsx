@@ -5,26 +5,31 @@ import styles from "./controller.module.css";
 import { CategoryWithCheckId } from "@/model/Categories";
 
 type Props = {
-  onSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onAdd: () => void;
-  onSelectDEL: () => void;
-  onAllDEL: () => void;
+  onSearch: (keyword: string) => void;
+  openModal: () => void;
+  onRemove: () => void;
 };
 
-export default function Controller({
-  onSearch,
-  onAdd,
-  onSelectDEL,
-  onAllDEL,
-}: Props) {
+export default function Controller({ onSearch, openModal, onRemove }: Props) {
+  const [inputValue, setInputValue] = useState("");
+  const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+    setInputValue(e.target.value);
+  };
+  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    onSearch(inputValue);
+  };
+
   return (
     <>
       <div className={styles.listContainer}>
-        <label htmlFor="search">검색</label>
-        <input id="search" type="text" onChange={onSearch} />
-        <button onClick={onAdd}>추가하기</button>
-        <button onClick={onSelectDEL}>선택삭제</button>
-        <button onClick={onAllDEL}>전체삭제</button>
+        <form onSubmit={onSubmit}>
+          <label htmlFor="search">검색</label>
+          <input id="search" type="text" onChange={handleInputChange} />
+          <button type="submit">검색하기</button>
+        </form>
+        <button onClick={openModal}>추가하기</button>
+        <button onClick={onRemove}>삭제</button>
       </div>
     </>
   );

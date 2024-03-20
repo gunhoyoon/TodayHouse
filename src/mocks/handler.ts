@@ -10,90 +10,145 @@ import { v4 as uuid } from "uuid";
 
 // msw가 실행되면서 핸들러에서도 로컬 스토리지에 접근이 가능해짐
 
-// let mockCategories: Category[] = [];
-const key = "카테고리";
 // if문이 자꾸 실패하니까 else문으로 넘어가는데 , else문에 return(응답) 해주고 있는게 없어서, 404가 발생하는거였음
-// msw 로 실행된다고 해서 브라우저는 아니라는거같음
-// 노드 환경인지에 관한 조건문으로 현재 어디서 돌고 있는지 확인
 
+// 카테고리 페이지에서 새로고침할 경우 데이터를 새로받아오게 되는데 , 이때 msw가 실행되는걸 기다려줘야함
+// 그로인해 delay가 필요함
+// 일단 카테고리 불러오는건 init하나로 처리하고, 디비 역할을 해서 수정 삭제 츄가 와 같은 업데이트는 핸들러에서해주고
+// useMutate는 클라반영만 해주기
+const categoryKey = "카테고리";
+const productKey = "상품";
+
+// 에러가 발생했을 때 또는 문제해결이 필요한 상황일 떄 큰틀부터 콘솔찍어보고 세분화하면서 범위 좁히기
 export const handlers = [
-  http.get("/api/admin/category", () => {
-    // console.log(typeof window !== "undefined");
-    if ("document" in globalThis) {
-      console.log("이프문");
-      const localData = localStorage.getItem(key) || "[]";
-      console.log("localData", localData);
-      return new HttpResponse(localData, {
+  http.get("/api/admin/initCategory", async () => {
+    const initData = localStorage.getItem(categoryKey) || "[]";
+    return new HttpResponse(initData, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }),
+  http.get("/api/admin/searchCategory", async ({ request }) => {
+    const url = new URL(request.url);
+    console.log("url", url);
+    const keyword = url.searchParams.get("searchTerm");
+    console.log("keyword", keyword);
+    const initData = localStorage.getItem(categoryKey) || "[]";
+
+    let copyData: Category[] = JSON.parse(initData);
+    //
+    try {
+      // 문자열을 JSON으로 파싱하여 배열로 변환
+
+      // Array.isArray를 사용하여 배열인지 확인
+      if (!Array.isArray(copyData)) {
+        console.error("Stored data is not an array");
+        copyData = []; // 유효하지 않은 경우 빈 배열로 초기화
+      } else {
+        const filterCategories = copyData.filter((category: Category) =>
+          category.name.includes(keyword as string)
+        );
+        // 배열 타입을 다시 JSON 으로
+        const searchResults = JSON.stringify(filterCategories);
+        // 카테고리가 있을 때
+        // console.log("searchResults", searchResults);
+        if (keyword !== null && keyword !== "") {
+          return new Response(searchResults, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          // 입력값이 없을 때 keyword null로 전달됨
+        } else if (keyword === "") {
+          // console.log("이 조건에 걸리겠지?");
+          return new Response(initData, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          // 존재하지 않는 카테고리를 입력할 때
+        } else {
+          return new Response(JSON.stringify([]), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing stored data: ", error);
+      copyData = []; // 오류 발생 시 빈 배열로 초기화
+    }
+  }),
+
+  // 아 알았다... 404는 if가 실패했는데 else 에서 반환값이 없어서 그랬던거구나
+
+  http.post("/api/admin/category", async ({ request }) => {
+    const newCategory = await request.json();
+    const id = uuid();
+    const rawData = localStorage.getItem(categoryKey) || "[]";
+    const initData: Category[] = JSON.parse(rawData);
+    if (
+      isCategory(newCategory) &&
+      !initData.some((category: Category) => category.name === newCategory.name)
+    ) {
+      console.log("if 통과");
+
+      const categoryWithId = { ...newCategory, id };
+      initData.push(categoryWithId);
+      localStorage.setItem(categoryKey, JSON.stringify(initData));
+      return new HttpResponse(JSON.stringify(initData), {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
     } else {
-      console.log("얼스");
-
-      return new HttpResponse("실패", {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
+      console.log("포스트 실패");
+      return new HttpResponse(JSON.stringify({ message: "추가 실패" }), {
+        status: 400,
       });
-    } // 아 알았다... 404는 if가 실패했는데 else 에서 반환값이 없어서 그랬던거구나
+    }
   }),
-  // http.post("/api/admin/category", async ({ request }) => {
-  //   const newCategory = await request.json();
-  //   const id = uuid();
-  //   if (typeof window !== "undefined") {
-  //     const localData = localStorage.getItem(key);
-  //     if (isCategory(newCategory)) {
-  //     }
-  //   }
-  //   if (
-  //     isCategory(newCategory) &&
-  //     !mockCategories.some(
-  //       (category: Category) => category.name === newCategory.name
-  //     )
-  //   ) {
-  //     console.log("if 통과");
+  http.delete(`/api/admin/category`, async ({ request }) => {
+    // 선택삭제, 전체삭제 전부 처리
+    console.log("요청 전달이 되남?");
+    const url = new URL(request.url);
+    console.log("url", url);
+    const rawData = localStorage.getItem(categoryKey) || "[]";
+    const initData: Category[] = JSON.parse(rawData);
+    console.log("initData", initData);
+    const categoryIds = url.searchParams.get("ids")?.split(",") || [];
+    console.log("categoryIds", categoryIds);
+    const filteredCategories = initData.filter(
+      (category: Category) => !categoryIds.includes(category.id)
+    );
+    //
+    localStorage.setItem(categoryKey, JSON.stringify(filteredCategories));
+    return new HttpResponse(JSON.stringify(filteredCategories), {
+      status: 200,
+    });
+    // if (isCategory(initData)) {
+    // } else {
+    //   console.log("삭제 조건문 else");
+    //   return new HttpResponse(JSON.stringify({ message: "삭제 실패" }), {
+    //     status: 400,
+    //   });
+    // }
+  }),
 
-  //     const categoryWithId = { ...newCategory, id };
-  //     mockCategories.push(categoryWithId);
-  //     return new HttpResponse(JSON.stringify(mockCategories), {
-  //       status: 200,
-  //     });
-  //   } else {
-  //     // console.log("실패");
-  //   }
-  // }),
-  // 여기서 들어오는 초기 데이터는 id까지 같이 있는애임, initCateogry가 없을 쑤도 있잖아
-  // http.post("/api/admin/initCategory", async ({ request }) => {
-  //   const initCategory = await request.json();
-  //   console.log("initCategory", initCategory);
-  //   if (!initCategory) {
-  //     mockCategories;
-  //   }
-  //   // 무조건 받으면 됨.
-  //   // console.log("상품 페이지에서 카테고리로 이동시 동작하니?");
-  //   // console.log(initCategory);
-  //   mockCategories = initCategory as Category[];
-  //   // console.log("mockCategories", mockCategories);
-  //   // if (isCategory(initCategory)) {
-  //   //   console.log("initCategory", initCategory);
-  //   //   mockCategories.push(initCategory);
-  //   //   console.log("mockCategories", mockCategories);
-  //   // } else {
-  //   //   console.log("실패");
-  //   // }
-  // }),
-  // http.delete(`/api/admin/category`, async ({ request }) => {
-  //   const url = new URL(request.url);
-  //   const categoryIds = url.searchParams.get("ids")?.split(",") || [];
-  //   const test = mockCategories.filter(
-  //     (category: Category) => !categoryIds.includes(category.id)
-  //   );
-  //   console.log("test", test);
-  //   return new HttpResponse(JSON.stringify(test), {
+  // 앱 진입 시 초기에 불러올 카테고리 데이터
+
+  // http.get("/api/admin/initProduct", async () => {
+  //   const initData = localStorage.getItem(productKey) || "[]";
+  //   console.log("찍히고 있음?");
+  //   return new Response(initData, {
   //     status: 200,
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
   //   });
   // }),
 ];

@@ -1,18 +1,33 @@
 "use client";
 import { handlers } from "@/mocks/handler";
 import { useEffect } from "react";
+import { InitCategoryData } from "../_util/categoryData";
 
+// 초기 카테고리를 불러오는거
 export default function MSWComponent() {
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // 윈도우가 있다는게 브라우저 환경이라는 뜻이니까 그 조건을 한번 거쳐서 사용
-      if (process.env.NEXT_PUBLIC_API_MOCKING === "enabled") {
-        const msw = require("msw/browser");
-
-        setTimeout(() => {
-          msw.setupWorker(...handlers).start();
-        }, 1500);
+    const fetchData = async () => {
+      try {
+        const data = await InitCategoryData();
+        // return console.log(data);
+      } catch (error) {
+        console.error("데이터 로딩 중 에러 발생: ", error);
       }
+    };
+
+    if (
+      typeof window !== "undefined" &&
+      process.env.NEXT_PUBLIC_API_MOCKING === "enabled"
+    ) {
+      const msw = require("msw/browser");
+      msw
+        .setupWorker(...handlers)
+        .start()
+        .then(() => {
+          fetchData();
+        });
+    } else {
+      fetchData();
     }
   }, []);
   // useEffect(() => {

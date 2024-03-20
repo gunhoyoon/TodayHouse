@@ -1,4 +1,8 @@
+export interface ImageInfo {
+  id: string;
+}
 export interface Product {
+  imageInfo: ImageInfo;
   category: string;
   name: string;
   price: string;

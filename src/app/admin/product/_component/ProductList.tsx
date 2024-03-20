@@ -15,12 +15,10 @@ export default function ProductList({ products }: Props) {
               <input
                 id="category"
                 type="checkbox"
-                checked={product.checked}
+                // checked={}
                 onChange={() => {}}
-                // 체크시 t/f 토글
-                // false 된 상품  선택삭제 + 전체삭제
-                // 수정버튼
               />
+              {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
               <p>카테고리 : {product.category}</p>
               <p>상품명 : {product.name}</p>
               <p>가격 : {product.price}</p>

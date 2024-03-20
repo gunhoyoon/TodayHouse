@@ -2,7 +2,6 @@
 import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 // import styles from "./categoryList.module.css";
 import { CategoryWithCheckId } from "@/model/Categories";
-import { collectGenerateParams } from "next/dist/build/utils";
 
 type Props = {
   setCategories: (categories: CategoryWithCheckId[]) => void;
@@ -42,12 +41,13 @@ const CategoryList = forwardRef(
       }
 
       // console.log("isAllCheck", isAllCheck);
-
-      if (ref && typeof ref !== "function" && ref.current) {
+      const hasEl = ref && typeof ref !== "function" && ref.current;
+      //
+      if (hasEl) {
         // ref가 있고, ref가 유효한 객체인지,
-        ref.current.checked = updatedCategories.every(
-          (category) => category.checked
-        );
+        const el = ref.current as HTMLInputElement;
+
+        el.checked = updatedCategories.every((category) => category.checked);
       }
     };
 
@@ -75,13 +75,10 @@ const CategoryList = forwardRef(
       // 현재 올 체크의 부정, 들어가는 값의 부정이니까.
       // console.log("isAllCheck", !isAllCheck);
 
-      // 56번 라인의 isAllCheck를 찍는거임. 그러니까 처음 checked의 값은 false니까 저 함수 자체가 false 리턴
-      // 그러니까 카테고리의 값은 이후에 업데이트 됐고, isAllCheck는 그 이전에 찍었으니까 false가 맞음
-      // 근데 난 이걸 컨테이너 레벨로 관리할거고, 이 상태에 따라서 전체 삭제를 해줄건데, 지금 반대로 값이 찍히고 있으니까, 그냥 부정값으로 전달해서 사용해야되는지 ... ?
-      // 근데 반대로 하기엔 onChange함수에서는 또 제대로 동작해
-
-      if (ref && typeof ref !== "function" && ref.current) {
-        ref.current.checked = !isAllCheck;
+      const hasEl = ref && typeof ref !== "function" && ref.current;
+      if (hasEl) {
+        const el = ref.current as HTMLInputElement;
+        el.checked = !isAllCheck;
       }
     };
 

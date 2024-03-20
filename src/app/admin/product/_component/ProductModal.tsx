@@ -2,13 +2,20 @@
 import React, { FormEventHandler, useState } from "react";
 import styles from "./productModal.module.css";
 import { Product, ProductWithCheck } from "@/model/Products";
+import { Category } from "@/model/Categories";
 type Props = {
-  onClose: () => void;
+  onModalClose: () => void;
   isOpen: boolean;
   setProduct: (product: ProductWithCheck[]) => void;
+  categoryData: Category[];
 };
 
-export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
+export default function ProductModal({
+  onModalClose,
+  isOpen,
+  setProduct,
+  categoryData,
+}: Props) {
   //   const [category, setCategory] = useState("");
   //   const [name, setName] = useState("");
   //   const [price, setPrice] = useState("");
@@ -18,6 +25,7 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
     name: "",
     price: "",
     description: "",
+    imageInfo: { id: "" },
   });
   const key = "상품";
   const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
@@ -39,6 +47,7 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
       const newProduct = { ...productInput, name: newProductName };
       storedProducts.unshift(newProduct);
       // unshift 배열 맨 앞 추가
+      // 이 로컬 업데이트는 핸들러에서 해줄거임. 그리고 성공 시 데이터를 받아 클라이언트 상태에 업데이트해줌
       localStorage.setItem(key, JSON.stringify(storedProducts));
       const productsWithCheck = JSON.parse(
         localStorage.getItem(key) || "[]"
@@ -47,12 +56,12 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
         checked: false,
       }));
       setProduct(productsWithCheck);
-
       setProductInput({
         category: "",
         name: "",
         price: "",
         description: "",
+        imageInfo: { id: "" },
       });
     }
   };
@@ -62,7 +71,7 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
         <div className={styles.formContainer}>
           <div className={styles.formHeader}>
             <p>상품 추가하기</p>
-            <button type="button" onClick={onClose}>
+            <button type="button" onClick={onModalClose}>
               ❌
             </button>
           </div>
@@ -82,6 +91,10 @@ export default function ProductModal({ onClose, isOpen, setProduct }: Props) {
                   // 이미 구조분해할당한 상태임
                 }}
               />
+            </div>
+            <div>
+              <label htmlFor="image">상품 이미지</label>
+              <input id="imageUpload" type="file" style={{ display: "none" }} />
             </div>
 
             <div>
