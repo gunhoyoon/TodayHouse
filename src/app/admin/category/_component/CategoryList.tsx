@@ -84,7 +84,13 @@ const CategoryList = forwardRef(
 
     return (
       <>
-        <input id="전체선택" type="checkbox" ref={ref} onChange={onAllCheck} />
+        <input
+          id="전체선택"
+          type="checkbox"
+          ref={ref}
+          checked={isAllCheck}
+          onChange={onAllCheck}
+        />
         <label htmlFor="전체선택">전체선택</label>
         <ul>
           {categories &&

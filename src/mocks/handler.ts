@@ -1,5 +1,7 @@
 import { Category } from "@/model/Categories";
+import { Product } from "@/model/Products";
 import { http, HttpResponse } from "msw";
+
 import { v4 as uuid } from "uuid";
 
 // 핸들러에 전달될 땐 로컬에 있는 데이터 뿐만 아니라 checked + id 까지 같이 전달이 되어야함
@@ -32,9 +34,9 @@ export const handlers = [
   }),
   http.get("/api/admin/searchCategory", async ({ request }) => {
     const url = new URL(request.url);
-    console.log("url", url);
-    const keyword = url.searchParams.get("searchTerm");
-    console.log("keyword", keyword);
+    // console.log("url", url);
+    const keyword = url?.searchParams.get("searchTerm");
+    // console.log("keyword", keyword);
     const initData = localStorage.getItem(categoryKey) || "[]";
 
     let copyData: Category[] = JSON.parse(initData);
@@ -141,23 +143,112 @@ export const handlers = [
 
   // 앱 진입 시 초기에 불러올 카테고리 데이터
 
-  // http.get("/api/admin/initProduct", async () => {
-  //   const initData = localStorage.getItem(productKey) || "[]";
-  //   console.log("찍히고 있음?");
-  //   return new Response(initData, {
-  //     status: 200,
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
-  // }),
+  http.get("/api/admin/initProduct", async () => {
+    const initData = localStorage.getItem(productKey) || "[]";
+    // const test = JSON.parse(initData);
+    // console.log(test);
+    // console.log(test[0].image);
+    // console.log("initData", JSON.parse(initData));
+    return new Response(initData, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }),
+
+  http.post("/api/admin/product", async ({ request }) => {
+    const rawData = localStorage.getItem(productKey) || "[]";
+    const initData: Product[] = JSON.parse(rawData);
+
+    const formData = await request.formData();
+    const name = formData.get("name") as string;
+    const base64Image = formData.get("image") as string;
+    const price = formData.get("price") as string;
+    const description = formData.get("description") as string;
+    const id = uuid();
+    const imageFileName = `${id}.png`;
+    const categoryData = formData.get("category");
+    const category = transformCategory(categoryData);
+    if (!category) {
+      return new Response(JSON.stringify("카테고리 파싱 실패"), {
+        status: 400, // 잘못된 요청
+      });
+    }
+
+    let mimeType = "image/png"; // 초기값으로 png MIME 타입 설정
+
+    // 파일명에서 확장자 추출
+    const extension = imageFileName.split(".").pop() as string;
+
+    // 확장자에 따른 MIME 타입 설정
+    switch (extension.toLowerCase()) {
+      case "jpg":
+      case "jpeg":
+        // 두 타입은 동일한 이미지 파일 형식을 나타낸다.
+        mimeType = "image/jpeg";
+        break;
+      case "png":
+        mimeType = "image/png";
+        break;
+      case "gif":
+        mimeType = "image/gif";
+        break;
+      // 추가적인 확장자에 대한 처리를 여기에 추가할 수 있습니다.
+      default:
+        // 처리할 수 없는 확장자인 경우 기본적으로 설정된 MIME 타입을 사용합니다.
+        break;
+    }
+
+    // 여기서 현재 JSON 으로 들어오게 됨, 왜냐 formData엔 키-값 하나의 쌍만 담을 수 있는데,
+    // 현재 카테고리는 {id:string,name:string} 타입을 가지고 있으므로, JSON으로 변환해서 담았기 떄문ㅇ
+
+    // 확장자에 따른 처리 필요
+
+    // localStorage.setItem(imageFileName, JSON.stringify(base64Image));
+    const productData: Product = {
+      category: category,
+      price: price,
+      description: description,
+      name: name,
+      id: id,
+      image: {
+        [imageFileName]: base64Image,
+      },
+    };
+
+    // id가 매번 달라질 수 있는데 이름을 뭘로 정의하지
+
+    // image: {
+    //   id: imageFileName, // 이미지 파일명을 저장
+    // },
+    // 이미지 아디를 가지고 있음, 안쓰는 경우는 나눠놓은거임.
+
+    initData.unshift(productData);
+    localStorage.setItem(productKey, JSON.stringify(initData));
+    return new Response(JSON.stringify(initData), {
+      status: 200,
+    });
+  }),
 ];
 
 function isCategory(data: any): data is Category {
   return typeof data === "object" && data !== null && "name" in data;
   // 페이로드 통해서 inputValue 들어오는데 body에 name : inputValue 가 아니라 축약으로 키, 벨류 같게 설정해놔서 타입에서 자꾸 에러나는거였음
 } // 타입 가드
-// 처음 앱, 수정
+function transformCategory(
+  categoryData: FormDataEntryValue | null
+): { name: string; id: string } | null {
+  if (categoryData && typeof categoryData === "string") {
+    try {
+      return JSON.parse(categoryData);
+    } catch (e) {
+      console.error("JSON 파싱 실패", e);
+      return null;
+    }
+  }
+  return null;
+}
 
 // handler 예시, http로 요청을 보내고, 응답은 HttpResponse 로 응답이 온다.
 // /api/admin/category [GET] 전체 카테고리

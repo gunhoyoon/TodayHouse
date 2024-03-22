@@ -1,70 +1,217 @@
 "use client";
-import React, { FormEventHandler, useState } from "react";
+import React, {
+  ChangeEventHandler,
+  FormEventHandler,
+  useRef,
+  useState,
+} from "react";
 import styles from "./productModal.module.css";
 import { Product, ProductWithCheck } from "@/model/Products";
 import { Category } from "@/model/Categories";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Compressor from "compressorjs";
+
 type Props = {
-  onModalClose: () => void;
+  // onModalClose: () => void;
   isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
   setProduct: (product: ProductWithCheck[]) => void;
   categoryData: Category[];
 };
+// 모달안에서만 모달이 닫히겠지
+const delay = (ms: number) =>
+  new Promise((res) => {
+    setTimeout(res, ms);
+  });
 
 export default function ProductModal({
-  onModalClose,
+  // onModalClose,
   isOpen,
   setProduct,
   categoryData,
+  setIsOpen,
 }: Props) {
   //   const [category, setCategory] = useState("");
   //   const [name, setName] = useState("");
   //   const [price, setPrice] = useState("");
   //   const [description, setDescription] = useState("");
-  const [productInput, setProductInput] = useState({
-    category: "",
+  const [newProductData, setNewProductData] = useState({
+    category: {
+      id: "",
+      name: "",
+    },
+    image: "",
     name: "",
     price: "",
     description: "",
-    imageInfo: { id: "" },
   });
-  const key = "상품";
-  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
+  const queryClient = useQueryClient();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  console.log("newProductData.category", newProductData.category);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const defaultImage =
+    "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
+  // 값을 다 넣고 모달 저장버튼을 눌렀을 때 mutate가 실행되어야하는거임,
 
-    let storedProducts: Product[] = JSON.parse(
-      localStorage.getItem(key) || "[]"
-    );
-
-    // 값이 있으면 가져오고 없으면 빈배열
-    // 상품 이름 중복,공백 제거
-    const newProductName = productInput.name.trim();
-    if (
-      newProductName &&
-      !storedProducts.some(
-        (product: Product) => product.name === newProductName
-      )
-    ) {
-      const newProduct = { ...productInput, name: newProductName };
-      storedProducts.unshift(newProduct);
-      // unshift 배열 맨 앞 추가
-      // 이 로컬 업데이트는 핸들러에서 해줄거임. 그리고 성공 시 데이터를 받아 클라이언트 상태에 업데이트해줌
-      localStorage.setItem(key, JSON.stringify(storedProducts));
-      const productsWithCheck = JSON.parse(
-        localStorage.getItem(key) || "[]"
-      ).map((product: Product) => ({
-        ...product,
-        checked: false,
-      }));
-      setProduct(productsWithCheck);
-      setProductInput({
-        category: "",
+  // const formDataRef = useRef(new FormData());
+  // 이거 포스팅하기.. ref useState. 리액트 라이프 사이클 관련
+  // 레프에 폼 데이터 받아서, 렌더시 다시 그려지지 않게..
+  const addProductMutation = useMutation({
+    mutationFn: async (product: any) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/product`,
+        {
+          method: "POST",
+          body: product,
+        }
+        // 객채에 담아서 보내줌
+      );
+      if (!response.ok) {
+        throw new Error("Request failed with status " + response.status);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("data", data);
+      alert("추가성공");
+      setNewProductData({
+        category: {
+          id: "",
+          name: "",
+        },
+        image: "",
         name: "",
         price: "",
         description: "",
-        imageInfo: { id: "" },
       });
+
+      // 이미지 프리뷰도 초기화
+      setImagePreview(null);
+
+      queryClient.setQueryData(["admin", "product"], data);
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("추가실패");
+    },
+  });
+
+  const compressImage = (file: File) => {
+    return new Promise((resolve, reject) => {
+      new Compressor(file, {
+        quality: 0.6, // 이미지 퀄리티 설정
+        maxWidth: 800, // 최대 너비 설정
+        maxHeight: 800, // 최대 높이 설정
+        success: resolve, // 압축한 이미지 저장
+        error: (err) => reject(err.message),
+      });
+    });
+  };
+
+  const blobToBase64 = (blob: Blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleImageChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const imagePreviewUrl = URL.createObjectURL(file);
+      setImagePreview(imagePreviewUrl);
+
+      try {
+        // 이미지 압축
+        const compressedImage = (await compressImage(file)) as Blob;
+
+        // Base64 인코딩
+        const base64Image = (await blobToBase64(compressedImage)) as string;
+        console.log("base64Image", base64Image);
+        setNewProductData({
+          ...newProductData,
+          image: base64Image,
+        });
+        // 이후에 Base64 인코딩된 이미지 데이터를 FormData에 추가하는 로직을 여기에 구현
+
+        // console.log("base64Image", base64Image);
+        // formData.append("image", base64Image);
+        // formData.append("image", base64Image);
+      } catch (error) {
+        console.error("Error processing image:", error);
+      }
     }
   };
+
+  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+
+    // if (!formDataRef.current.has("image")) {
+    //   console.log("이미지가 추가되지 않았습니다.");
+    //   return; // 이미지가 추가되지 않았다면 제출을 중단하고 빠져나감
+    // }
+    const formData = new FormData();
+    formData.append("category", JSON.stringify(newProductData.category));
+    formData.append("name", newProductData.name);
+    formData.append("price", newProductData.price);
+    // formData.append("image", newProductData.image);
+    formData.append("description", newProductData.description);
+    if (newProductData.image) {
+      formData.append("image", newProductData.image);
+    }
+    console.log("formDataIMG", formData.get("image"));
+
+    addProductMutation.mutate(formData);
+  };
+
+  const triggerFileInput = () => {
+    if (fileRef.current) {
+      console.log(fileRef.current);
+      console.log(fileRef.current.click());
+      // undefined가 나와서 뭐가 잘못된건줄 알았는데, 그냥 껐다키니까 되네 ..
+    }
+  };
+  const onModalClose = () => {
+    setIsOpen(false);
+    setImagePreview(null);
+    // 모달이 닫히면 프리뷰도 비워줘야하니까,
+  };
+  const prevDEL = () => {
+    setImagePreview(null);
+  };
+  console.log("categoryData", categoryData);
+  const onChangeHandler: ChangeEventHandler<HTMLSelectElement> = (e) => {
+    // const el = e.target.value;
+
+    // const test = categoryData.find((item) => item.id === el);
+    // const aa = test?.name;
+    // const bb = test?.id;
+    // console.log("aa", aa, bb);
+
+    const categoryId = e.target.value; // 카테고리 id 반환
+    const selectedCategory = categoryData.find(
+      (category) => category.id === categoryId
+    );
+    if (selectedCategory) {
+      setNewProductData({
+        ...newProductData,
+        category: {
+          id: selectedCategory.id,
+          name: selectedCategory.name,
+        },
+      });
+    }
+    // console.log("newProductData", newProductData.category);
+  };
+  console.log("categoryData", categoryData);
+  // image,category,name,price,description 중 category, image 제외한 나머지는 텍스트로 입력
+  // 포스트 시 프로덕트 정보가 담긴 객체를 전달할거고, category는 selectOption으로 전달
   return (
     <>
       {isOpen && (
@@ -76,67 +223,111 @@ export default function ProductModal({
             </button>
           </div>
           <form onSubmit={onSubmit}>
-            <div>
-              <label htmlFor="category">카테고리</label>
-              <input
-                id="category"
-                type="text"
-                required
-                value={productInput.category}
-                onChange={(e) => {
-                  setProductInput({
-                    ...productInput,
-                    category: e.target.value,
-                  });
-                  // 이미 구조분해할당한 상태임
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="image">상품 이미지</label>
-              <input id="imageUpload" type="file" style={{ display: "none" }} />
-            </div>
+            <fieldset>
+              <legend></legend>
+              <div>
+                <label htmlFor="image">
+                  <div className={styles.imagePrevContainer}>
+                    {imagePreview ? (
+                      <>
+                        <button
+                          style={{ marginLeft: 150 }}
+                          type="button"
+                          onClick={prevDEL}
+                        >
+                          ❌
+                        </button>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className={styles.commonStyle}
+                        />
+                      </>
+                    ) : (
+                      <button
+                        onClick={triggerFileInput}
+                        type="button"
+                        style={{
+                          backgroundImage: `url(${defaultImage})`,
+                          // backgroundSize: "cover",
+                        }}
+                        className={styles.commonStyle}
+                      ></button>
+                    )}
+                  </div>
+                </label>
+                <input
+                  id="imageUpload"
+                  type="file"
+                  name="image"
+                  ref={fileRef}
+                  style={{ display: "none" }}
+                  onChange={handleImageChange}
+                />
+              </div>
+              <div>
+                <select
+                  name="category"
+                  id="category-select"
+                  onChange={onChangeHandler}
+                >
+                  <option value="">선택하세요</option>
+                  {categoryData?.map((category: Category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                  {/* 로컬에서 클라이언트로 넘겨받고 checked까지 포함된 카테고리 데이터의 name과 id임, 이걸 그냥 상품 데이터에 추가만 해줌 */}
+                </select>
+              </div>
 
-            <div>
-              <label htmlFor="name">상품명</label>
-              <input
-                id="name"
-                type="text"
-                required
-                value={productInput.name}
-                onChange={(e) => {
-                  setProductInput({ ...productInput, name: e.target.value });
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="price">가격</label>
-              <input
-                id="price"
-                type="text"
-                required
-                value={productInput.price}
-                onChange={(e) => {
-                  setProductInput({ ...productInput, price: e.target.value });
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="description">상품 소개</label>
-              <input
-                id="description"
-                type="text"
-                required
-                value={productInput.description}
-                onChange={(e) => {
-                  setProductInput({
-                    ...productInput,
-                    description: e.target.value,
-                  });
-                }}
-              />
-            </div>
-            <button type="submit">저장</button>
+              <div>
+                <label htmlFor="name">상품명</label>
+                <input
+                  id="name"
+                  type="text"
+                  required
+                  value={newProductData.name}
+                  onChange={(e) => {
+                    setNewProductData({
+                      ...newProductData,
+                      name: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <label htmlFor="price">가격</label>
+                <input
+                  id="price"
+                  type="text"
+                  required
+                  value={newProductData.price}
+                  onChange={(e) => {
+                    setNewProductData({
+                      ...newProductData,
+                      price: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <label htmlFor="description">상품 소개</label>
+                <input
+                  id="description"
+                  type="text"
+                  required
+                  value={newProductData.description}
+                  onChange={(e) => {
+                    setNewProductData({
+                      ...newProductData,
+                      description: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+              <button type="submit">저장</button>
+            </fieldset>
           </form>
         </div>
       )}

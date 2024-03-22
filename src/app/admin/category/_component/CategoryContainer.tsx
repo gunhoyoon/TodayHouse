@@ -33,7 +33,7 @@ const CategoryContainer = () => {
 
     if (data) {
       console.log("data", data);
-      const categoriesWithCheckId = data.map((category) => ({
+      const categoriesWithCheckId = data.map((category: Category) => ({
         ...category,
         checked: false, // 기본적으로 모든 카테고리를 unchecked 상태로 설정합니다.
         // 리스트마다 고유의 아이디가 있을텐데, checked가 true인 친구의 id를 delete로 보낸다?
@@ -110,9 +110,9 @@ const CategoryContainer = () => {
     onSuccess: (data) => {
       // 로컬 데이터 변경 핸들러 내부에서 다 해주기
       alert("삭제 성공");
-      delay(100);
       queryClient.setQueryData(["admin", "category"], data);
       setIsAllCheck(false);
+
       console.log("isAllCheck", isAllCheck);
     },
     onError: (err) => {

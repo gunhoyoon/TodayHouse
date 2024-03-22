@@ -38,6 +38,7 @@ const CategoryModal = ({ isModal, onModalClose }: Props) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ name: inputValue }),
+          // 객체에 담아서 보내준다.
         }
       );
       if (!response.ok) {
@@ -81,7 +82,7 @@ const CategoryModal = ({ isModal, onModalClose }: Props) => {
     // 로다쉬 사용하면 디바운스나 깊은 복사 와 같은 기능들을 쉽게 가져올 수 있는데 라이브러리 자체가 무게가 무겁다는 단점이 있음
     // 위의 단점은 웹펙의 트리쉐이킹을 통해 사용되지 않는 코드를 제거해서 번들의 크기를 줄일 수 있음
     if (noSpaceValue.length < e.target.value.length) {
-      alert("공백으로 시작하는 카테고리명을 사용할 수 없습니다.");
+      alert("카테고리에 공백이 추가될 수 없습니다.");
     } else {
       setInputValue(noSpaceValue);
     }

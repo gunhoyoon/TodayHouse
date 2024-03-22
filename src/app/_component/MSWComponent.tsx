@@ -2,14 +2,16 @@
 import { handlers } from "@/mocks/handler";
 import { useEffect } from "react";
 import { InitCategoryData } from "../_util/categoryData";
+import { InitProductData } from "../_util/productData";
 
 // 초기 카테고리를 불러오는거
 export default function MSWComponent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await InitCategoryData();
-        // return console.log(data);
+        const categoryData = await InitCategoryData();
+        const productData = await InitProductData();
+        // return console.log(categoryData, productData);
       } catch (error) {
         console.error("데이터 로딩 중 에러 발생: ", error);
       }

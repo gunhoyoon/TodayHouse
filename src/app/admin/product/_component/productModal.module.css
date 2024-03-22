@@ -14,3 +14,26 @@
 /* .formHeader button {
   padding: 8px 12px;
 } */
+
+.imagePrevContainer {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.commonStyle {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-size: contain;
+  max-height: 200px;
+  max-width: 200px;
+  object-fit: contain;
+}
