@@ -1,5 +1,5 @@
 import { Category } from "@/model/Categories";
-import { Product } from "@/model/Products";
+import { Product, ProductWithCheck } from "@/model/Products";
 import { http, HttpResponse } from "msw";
 
 import { v4 as uuid } from "uuid";
@@ -35,7 +35,7 @@ export const handlers = [
   http.get("/api/admin/searchCategory", async ({ request }) => {
     const url = new URL(request.url);
     // console.log("url", url);
-    const keyword = url?.searchParams.get("searchTerm");
+    const searchTerm = url?.searchParams.get("searchTerm");
     // console.log("keyword", keyword);
     const initData = localStorage.getItem(categoryKey) || "[]";
 
@@ -50,13 +50,13 @@ export const handlers = [
         copyData = []; // 유효하지 않은 경우 빈 배열로 초기화
       } else {
         const filterCategories = copyData.filter((category: Category) =>
-          category.name.includes(keyword as string)
+          category.name.includes(searchTerm as string)
         );
         // 배열 타입을 다시 JSON 으로
         const searchResults = JSON.stringify(filterCategories);
         // 카테고리가 있을 때
         // console.log("searchResults", searchResults);
-        if (keyword !== null && keyword !== "") {
+        if (searchTerm !== null && searchTerm !== "") {
           return new Response(searchResults, {
             status: 200,
             headers: {
@@ -64,7 +64,7 @@ export const handlers = [
             },
           });
           // 입력값이 없을 때 keyword null로 전달됨
-        } else if (keyword === "") {
+        } else if (searchTerm === "") {
           // console.log("이 조건에 걸리겠지?");
           return new Response(initData, {
             status: 200,
@@ -118,20 +118,38 @@ export const handlers = [
     // 선택삭제, 전체삭제 전부 처리
     console.log("요청 전달이 되남?");
     const url = new URL(request.url);
-    console.log("url", url);
+    // console.log("url", url);
     const rawData = localStorage.getItem(categoryKey) || "[]";
     const initData: Category[] = JSON.parse(rawData);
+
+    const rawData1 = localStorage.getItem(productKey) || "[]";
+    const initData1: Product[] = JSON.parse(rawData1);
     console.log("initData", initData);
+
     const categoryIds = url.searchParams.get("ids")?.split(",") || [];
     console.log("categoryIds", categoryIds);
-    const filteredCategories = initData.filter(
-      (category: Category) => !categoryIds.includes(category.id)
+
+    const isCategoryUsed = initData1.some((product: Product) =>
+      categoryIds.includes(product.category.id)
     );
-    //
-    localStorage.setItem(categoryKey, JSON.stringify(filteredCategories));
-    return new HttpResponse(JSON.stringify(filteredCategories), {
-      status: 200,
-    });
+    // 사용중인지 확인
+
+    if (isCategoryUsed) {
+      return new HttpResponse("해당 카테고리는 사용중입니다.", { status: 409 });
+      // 서버 책임
+    } else {
+      const filteredCategories = initData.filter(
+        (category: Category) => !categoryIds.includes(category.id)
+      );
+      // 선택되지 않은 친구들 반환
+      localStorage.setItem(categoryKey, JSON.stringify(filteredCategories));
+      return new HttpResponse(JSON.stringify(filteredCategories), {
+        status: 200,
+      });
+    }
+    // 상품 아이디 추출, 카테고리 아이디 추출
+    // 겹치는거 있으면 if error 반환
+
     // if (isCategory(initData)) {
     // } else {
     //   console.log("삭제 조건문 else");
@@ -150,6 +168,32 @@ export const handlers = [
     // console.log(test[0].image);
     // console.log("initData", JSON.parse(initData));
     return new Response(initData, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }),
+  http.get("/api/admin/searchProduct", async ({ request }) => {
+    const url = new URL(request.url);
+    console.log("url", url);
+    const searchTerm = url?.searchParams.get("searchTerm");
+    console.log("searchTerm", searchTerm);
+    // 검색어 가져오기
+    const initData = localStorage.getItem(productKey) || "[]";
+    // 로컬엔 스트링 밖에 몬들억가니가 꺼내서 파싱하면서 타입 변환
+    let copyData: Product[] = JSON.parse(initData);
+
+    // const searchData = copyData
+    //   .map((product: Product) => product.name)
+    //   .includes(searchTerm as string);
+    // console.log("searchData", searchData);
+    const filteredProducts = copyData.filter((product: Product) =>
+      product.name.includes(searchTerm as string)
+    );
+    console.log(filteredProducts);
+    // return new Response(JSON.stringify(searchData), {
+    return new Response(JSON.stringify(filteredProducts), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -227,6 +271,25 @@ export const handlers = [
     initData.unshift(productData);
     localStorage.setItem(productKey, JSON.stringify(initData));
     return new Response(JSON.stringify(initData), {
+      status: 200,
+    });
+  }),
+  http.delete("/api/admin/product", async ({ request }) => {
+    const url = new URL(request.url);
+    // console.log("url", url);
+    // ?ids=c7ad1846-6057-4ebf-862d-d0dbc6d4dc41"
+    // ids=394d2f41-ff78-4917-b573-467bace8ab66,bdfc93a1-bf80-42c3-b4eb-0cac514a580d , 다중선택
+    const rawData = localStorage.getItem(productKey) || "[]";
+    const initData: Product[] = JSON.parse(rawData);
+    console.log("initData", initData);
+    const productIds = url.searchParams.get("ids")?.split(",") || [];
+    console.log("productIds", productIds);
+    const filteredProducts = initData.filter(
+      (product: Product) => !productIds.includes(product.id)
+    );
+    //
+    localStorage.setItem(productKey, JSON.stringify(filteredProducts));
+    return new HttpResponse(JSON.stringify(filteredProducts), {
       status: 200,
     });
   }),

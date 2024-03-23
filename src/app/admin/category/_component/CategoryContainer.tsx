@@ -55,10 +55,10 @@ const CategoryContainer = () => {
   // onSearch 이벤트 핸들러 내부에서 hook을 사용하지 못하는 규칙
   const search = useMutation({
     mutationFn: async (category: string) => {
-      const keyWord = category;
-      console.log("keyWord", keyWord);
+      const searchTerm = category;
+      console.log("searchTerm", searchTerm);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/searchCategory?searchTerm=${keyWord}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/searchCategory?searchTerm=${searchTerm}`,
         {
           method: "GET",
         }
@@ -86,8 +86,8 @@ const CategoryContainer = () => {
     },
   });
 
-  const onSearch = (keyword: string) => {
-    search.mutate(keyword);
+  const onSearch = (searchTerm: string) => {
+    search.mutate(searchTerm);
   };
 
   const remove = useMutation({
@@ -117,7 +117,7 @@ const CategoryContainer = () => {
     },
     onError: (err) => {
       console.error(err);
-      alert("삭제 실패");
+      alert("해당 카테고리가 사용중이므로 삭제할 수 없습니다.");
     },
   });
 

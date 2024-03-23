@@ -47,7 +47,7 @@ export default function ProductModal({
   });
   const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  console.log("newProductData.category", newProductData.category);
+  // console.log("newProductData.category", newProductData.category);
   const fileRef = useRef<HTMLInputElement>(null);
   const defaultImage =
     "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
@@ -72,7 +72,7 @@ export default function ProductModal({
       return response.json();
     },
     onSuccess: (data) => {
-      console.log("data", data);
+      // console.log("data", data);
       alert("추가성공");
       setNewProductData({
         category: {
@@ -133,7 +133,7 @@ export default function ProductModal({
 
         // Base64 인코딩
         const base64Image = (await blobToBase64(compressedImage)) as string;
-        console.log("base64Image", base64Image);
+        // console.log("base64Image", base64Image);
         setNewProductData({
           ...newProductData,
           image: base64Image,
@@ -165,14 +165,16 @@ export default function ProductModal({
     if (newProductData.image) {
       formData.append("image", newProductData.image);
     }
-    console.log("formDataIMG", formData.get("image"));
+    if (newProductData.category.id === "") {
+      return alert("카테고리를 선택해주세요");
+    }
+    // console.log("formDataIMG", formData.get("image"));
 
     addProductMutation.mutate(formData);
   };
 
   const triggerFileInput = () => {
     if (fileRef.current) {
-      console.log(fileRef.current);
       console.log(fileRef.current.click());
       // undefined가 나와서 뭐가 잘못된건줄 알았는데, 그냥 껐다키니까 되네 ..
     }
@@ -185,7 +187,7 @@ export default function ProductModal({
   const prevDEL = () => {
     setImagePreview(null);
   };
-  console.log("categoryData", categoryData);
+  // console.log("categoryData", categoryData);
   const onChangeHandler: ChangeEventHandler<HTMLSelectElement> = (e) => {
     // const el = e.target.value;
 

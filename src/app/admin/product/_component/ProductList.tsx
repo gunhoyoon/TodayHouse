@@ -1,60 +1,140 @@
-import { Image, ProductWithCheck } from "@/model/Products";
-import React from "react";
+import { Image, Product, ProductWithCheck } from "@/model/Products";
+import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 import styles from "./productList.module.css";
 type Props = {
   products: ProductWithCheck[];
+  setProducts: (products: ProductWithCheck[]) => void;
+  isAllCheck: boolean;
+  setIsAllCheck: (isAllCheck: boolean) => void;
+  ref: React.RefObject<HTMLInputElement>;
 };
 
-export default function ProductList({ products }: Props) {
-  // const test = products.map((v) => {
-  //   return v.image;
-  // });
-  // console.log(test);
-  // const test1 = test.forEach((item: Image) => {
-  //   // 각 객체의 값을 꺼내어 순회
-  //   // 프로퍼티 키 뽑아서 배열에 담고 forEach
-  //   Object.keys(item).forEach((key, i) => {
-  //     // key에 해당하는 value 출력
-  //     console.log(key);
-  //     console.log("item");
-  //     const test2 = item[key];
-  //     console.log("test2", test2);
-  //     return test2;
-  //     // const value = item[key];
-  //     // console.log(value);
-  //   });
-  // });
+const ProductList = forwardRef(
+  (
+    { products, setProducts, setIsAllCheck, isAllCheck }: Props,
+    ref: ForwardedRef<HTMLInputElement>
+  ) => {
+    const toggleCheck = (index: number) => {
+      console.log(index);
+      const updatedChecked = [...products];
+      updatedChecked[index].checked = !updatedChecked[index].checked;
+      console.log("updatedChecked", updatedChecked);
+      setProducts(updatedChecked);
 
-  // 역직렬화 클라이언트에서 처리, 여기선 계속 역직렬화를 처리하고 있을것이므로 검색을 하고 나서도 상관없음. 서버에서 필터링된 값만 전달받을 뿐임
-  return (
-    <div>
-      <ul className={styles.container}>
-        {products.map((product: ProductWithCheck, index) => (
-          <li key={index}>
-            <div>
-              <input
-                id="category"
-                type="checkbox"
-                // checked={}
-                onChange={() => {}}
-              />
-              {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
-              <img
-                src={`data:image/png;base64,${Object.values(product.image)[0]}`}
-                alt="?"
-                width={200}
-                height={200}
-              />
-              <p>카테고리 : {product.category.name}</p>
+      const isAnyProductNotChecked = products.some(
+        (product: ProductWithCheck) => product.checked === false
+      );
+      // 업데이트 됐어. 그 배열에서 check가 하나라도 false냐 ? false면 전체 선택 false,
+      // 아니고 전체 다 선택됐냐 하면 isAllCheck true 값 업데이트
 
-              {/* <p>이미지 {product.image}</p> */}
-              <p>상품명 : {product.name}</p>
-              <p>가격 : {product.price}</p>
-              <p>상품 소개 : {product.description}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+      // console.log("categories", categories);
+      // console.log("isAnyCategoryNotChecked", isAnyCategoryNotChecked);
+      if (isAnyProductNotChecked) {
+        setIsAllCheck(false);
+      } else {
+        setIsAllCheck(true);
+      }
+
+      // console.log("isAllCheck", isAllCheck);
+      const hasEl = ref && typeof ref !== "function" && ref.current;
+      //
+      if (hasEl) {
+        // ref가 있고, ref가 유효한 객체인지,
+        const el = ref.current as HTMLInputElement;
+
+        el.checked = updatedChecked.every((product) => product.checked);
+      }
+    };
+
+    const onAllCheck: ChangeEventHandler<HTMLInputElement> = () => {
+      const isAllCheck = products.every(
+        (product: ProductWithCheck) => product.checked === true
+      );
+      // 이건 그냥 값을 업데이트 해줘야되냐? 를 위한 확인 과정임
+      // 체크가 전부 트루인지 확인, 하나라도 false면 false 반환할거니까
+      // 근데 여기서 중요한건 값을 업데이트하기전의 값을 가지고 함수 도는거임
+
+      // const toggledCheckedCategories = categories.forEach(
+      //   (category: CategoryWithCheckId) => (category.checked = !isAllCheck)
+      // );
+      const toggledCheckedProducts = products.map(
+        (product: ProductWithCheck) => ({
+          ...product,
+          checked: !isAllCheck,
+        })
+      );
+      // 실제 값이 업데이트 되는건 여기임
+      // 그럼 isAllCheck와 같은 로직을 값이 업데이트 된 아래에서 작성하면, 바뀐 값으로 찍히겠지? 업데이트해줬으니까 64라인에서
+      // 복사한거 돌면서 checked를 isAllCheck의 부정값으로 업데이트, 여기서 업데이트해줌
+      // 전체가 true 면 false 할당, 하나라도 false면 true 할당
+
+      setProducts(toggledCheckedProducts);
+      // 업데이트한 복사본 할당
+      setIsAllCheck(!isAllCheck);
+      // 삭제 성공할 때 풀어줘야하니까 컨테이너 에서 전달받는데.
+
+      const hasEl = ref && typeof ref !== "function" && ref.current;
+      if (hasEl) {
+        const el = ref.current as HTMLInputElement;
+        el.checked = !isAllCheck;
+      }
+    };
+    const defaultImage =
+      "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
+    console.log("products", products);
+    return (
+      <div>
+        <input
+          id="allCheck"
+          type="checkbox"
+          checked={isAllCheck}
+          onChange={onAllCheck}
+          ref={ref}
+        />
+        <label htmlFor="allCheck">전체선택</label>
+        <ul className={styles.container}>
+          {products &&
+            products.map((product: ProductWithCheck, index) => (
+              <li key={index}>
+                <div>
+                  <input
+                    id={`product-${index}`}
+                    type="checkbox"
+                    checked={product.checked}
+                    onChange={() => {
+                      toggleCheck(index);
+                    }}
+                  />
+                  {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
+                  {Object.values(product.image)[0] ? (
+                    <img
+                      src={`data:image/png;base64,${
+                        Object.values(product.image)[0]
+                      }`}
+                      alt={product.name}
+                      width={200}
+                      height={200}
+                    />
+                  ) : (
+                    <img
+                      src={defaultImage}
+                      alt="이미지 없음"
+                      width={200}
+                      height={200}
+                    />
+                  )}
+
+                  <p>카테고리 : {product.category.name}</p>
+                  <p>상품명 : {product.name}</p>
+                  <p>가격 : {product.price}</p>
+                  <p>상품 소개 : {product.description}</p>
+                </div>
+              </li>
+            ))}
+        </ul>
+      </div>
+    );
+  }
+);
+
+export default ProductList;

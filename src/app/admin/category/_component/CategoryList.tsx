@@ -16,14 +16,11 @@ const CategoryList = forwardRef(
     { setCategories, categories, setIsAllCheck, isAllCheck }: Props,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
-    // 카테고리 배열. 인덱스 -> .checked 속성 접근 -> 변경.
-    // console.log("isAllCheck", isAllCheck);
-    // console.log("categories", categories);
-    const onChange = (index: number) => {
-      const updatedCategories = [...categories];
-      updatedCategories[index].checked = !updatedCategories[index].checked;
+    const toggleCheck = (index: number) => {
+      const updatedChecked = [...categories];
+      updatedChecked[index].checked = !updatedChecked[index].checked;
       // 체크된 인덱스 받아서 걔 체크드 들어가서 부정값 넣어줌(토글)
-      setCategories(updatedCategories);
+      setCategories(updatedChecked);
       // 그리고 상태ㅔ 업데이트 근데 이 업데이트 되는 과정이 좀늦어, 즉 업데이트 되기 전의 상태로 some 체크?
 
       const isAnyCategoryNotChecked = categories.some(
@@ -47,29 +44,33 @@ const CategoryList = forwardRef(
         // ref가 있고, ref가 유효한 객체인지,
         const el = ref.current as HTMLInputElement;
 
-        el.checked = updatedCategories.every((category) => category.checked);
+        el.checked = updatedChecked.every((category) => category.checked);
       }
     };
 
     const onAllCheck: ChangeEventHandler<HTMLInputElement> = () => {
-      const allCheckCategories = [...categories];
-      // 얕은 복사를 하고
       const isAllCheck = categories.every(
         (category) => category.checked === true
-      ); //초기에 실행시 false , checked 초기값이 false니까
+      );
       // 이건 그냥 값을 업데이트 해줘야되냐? 를 위한 확인 과정임
       // 체크가 전부 트루인지 확인, 하나라도 false면 false 반환할거니까
       // 근데 여기서 중요한건 값을 업데이트하기전의 값을 가지고 함수 도는거임
 
-      allCheckCategories.forEach(
-        (category: CategoryWithCheckId) => (category.checked = !isAllCheck)
+      // const toggledCheckedCategories = categories.forEach(
+      //   (category: CategoryWithCheckId) => (category.checked = !isAllCheck)
+      // );
+      const toggledCheckedCategories = categories.map(
+        (category: CategoryWithCheckId) => ({
+          ...category,
+          checked: !isAllCheck,
+        })
       );
       // 실제 값이 업데이트 되는건 여기임
       // 그럼 isAllCheck와 같은 로직을 값이 업데이트 된 아래에서 작성하면, 바뀐 값으로 찍히겠지? 업데이트해줬으니까 64라인에서
       // 복사한거 돌면서 checked를 isAllCheck의 부정값으로 업데이트, 여기서 업데이트해줌
       // 전체가 true 면 false 할당, 하나라도 false면 true 할당
 
-      setCategories(allCheckCategories);
+      setCategories(toggledCheckedCategories);
       // 업데이트한 복사본 할당
       setIsAllCheck(!isAllCheck);
       // 현재 올 체크의 부정, 들어가는 값의 부정이니까.
@@ -85,13 +86,13 @@ const CategoryList = forwardRef(
     return (
       <>
         <input
-          id="전체선택"
+          id="allCheck"
           type="checkbox"
           ref={ref}
           checked={isAllCheck}
           onChange={onAllCheck}
         />
-        <label htmlFor="전체선택">전체선택</label>
+        <label htmlFor="allCheck">전체선택</label>
         <ul>
           {categories &&
             categories.map((category, index) => (
@@ -101,7 +102,7 @@ const CategoryList = forwardRef(
                   type="checkbox"
                   checked={category.checked}
                   onChange={() => {
-                    onChange(index);
+                    toggleCheck(index);
                   }}
                 />
                 <span>{category.name}</span>
