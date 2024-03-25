@@ -1,17 +1,19 @@
 import { Image, Product, ProductWithCheck } from "@/model/Products";
 import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 import styles from "./productList.module.css";
+import Loading from "../../_component/Loading";
 type Props = {
   products: ProductWithCheck[];
   setProducts: (products: ProductWithCheck[]) => void;
   isAllCheck: boolean;
   setIsAllCheck: (isAllCheck: boolean) => void;
   ref: React.RefObject<HTMLInputElement>;
+  isPending: boolean;
 };
 
 const ProductList = forwardRef(
   (
-    { products, setProducts, setIsAllCheck, isAllCheck }: Props,
+    { products, setProducts, setIsAllCheck, isAllCheck, isPending }: Props,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
     const toggleCheck = (index: number) => {
@@ -83,56 +85,66 @@ const ProductList = forwardRef(
       "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
     console.log("products", products);
     return (
-      <div>
-        <input
-          id="allCheck"
-          type="checkbox"
-          checked={isAllCheck}
-          onChange={onAllCheck}
-          ref={ref}
-        />
-        <label htmlFor="allCheck">전체선택</label>
-        <ul className={styles.container}>
-          {products &&
-            products.map((product: ProductWithCheck, index) => (
-              <li key={index}>
-                <div>
-                  <input
-                    id={`product-${index}`}
-                    type="checkbox"
-                    checked={product.checked}
-                    onChange={() => {
-                      toggleCheck(index);
-                    }}
-                  />
-                  {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
-                  {Object.values(product.image)[0] ? (
-                    <img
-                      src={`data:image/png;base64,${
-                        Object.values(product.image)[0]
-                      }`}
-                      alt={product.name}
-                      width={200}
-                      height={200}
+      <>
+        {isPending ? (
+          <Loading />
+        ) : (
+          <div className={styles.productContainer}>
+            <div className={styles.productAllCheck}>
+              <input
+                id="allCheck"
+                type="checkbox"
+                checked={isAllCheck}
+                onChange={onAllCheck}
+                ref={ref}
+              />
+              <label htmlFor="allCheck">전체선택</label>
+            </div>
+            <ul className={styles.itemContainer}>
+              {products &&
+                products.map((product: ProductWithCheck, index) => (
+                  <li key={index}>
+                    <input
+                      id={`product-${index}`}
+                      type="checkbox"
+                      checked={product.checked}
+                      onChange={() => {
+                        toggleCheck(index);
+                      }}
                     />
-                  ) : (
-                    <img
-                      src={defaultImage}
-                      alt="이미지 없음"
-                      width={200}
-                      height={200}
-                    />
-                  )}
+                    {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
+                    <div>
+                      {Object.values(product.image)[0] ? (
+                        <img
+                          src={`data:image/png;base64,${
+                            Object.values(product.image)[0]
+                          }`}
+                          alt={product.name}
+                          width={200}
+                          height={200}
+                        />
+                      ) : (
+                        <img
+                          src={defaultImage}
+                          alt="이미지 없음"
+                          width={200}
+                          height={200}
+                        />
+                      )}
 
-                  <p>카테고리 : {product.category.name}</p>
-                  <p>상품명 : {product.name}</p>
-                  <p>가격 : {product.price}</p>
-                  <p>상품 소개 : {product.description}</p>
-                </div>
-              </li>
-            ))}
-        </ul>
-      </div>
+                      <div>
+                        <p>카테고리 : {product.category.name}</p>
+                        <p>상품명 : {product.name}</p>
+                        <p>가격 : {product.price}</p>
+                        <p>상품 소개 : {product.description}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+      </>
     );
   }
 );

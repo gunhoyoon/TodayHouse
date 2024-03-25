@@ -24,8 +24,13 @@ export default function Controller({ onSearch, openModal, onRemove }: Props) {
     <>
       <div className={styles.listContainer}>
         <form onSubmit={onSubmit}>
-          <label htmlFor="search">검색</label>
-          <input id="search" type="text" onChange={handleInputChange} />
+          <label htmlFor="search"></label>
+          <input
+            id="search"
+            placeholder="Search..."
+            type="text"
+            onChange={handleInputChange}
+          />
           <button type="submit">검색하기</button>
         </form>
         <button onClick={openModal}>추가하기</button>

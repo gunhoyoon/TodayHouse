@@ -10,9 +10,6 @@ import { InitCategoryData } from "@/app/_util/categoryData";
 import { Category } from "@/model/Categories";
 import { InitProductData } from "@/app/_util/productData";
 
-// 카테고리 데이터를 상품에서 사용해줘야함
-// 카테고리가 여기선 select option 으로 존재했으면 좋겠음
-
 const ProductContainer = () => {
   const [products, setProducts] = useState<ProductWithCheck[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -50,10 +47,9 @@ const ProductContainer = () => {
         checked: false,
       }));
       setProducts(productsWithCheckId);
-      // 셋 업데이트 무한 루프 방지 useEffect
     }
   }, [productData]);
-  const search = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (product: string) => {
       const searchTerm = product;
 
@@ -69,17 +65,18 @@ const ProductContainer = () => {
       return response.json();
     },
     onSuccess: (data: Product[]) => {
-      console.log("data", data);
-      // alert("검색성공");
-      const searchData = data.map((v) => ({ ...v, checked: false }));
+      const searchData = data.map((product: Product) => ({
+        ...product,
+        checked: false,
+      }));
       setProducts(searchData);
     },
-    onError: () => {
-      alert("검색실패");
+    onError: (err) => {
+      console.error(err);
     },
   });
   const onSearch = (searchTerm: string) => {
-    search.mutate(searchTerm);
+    mutate(searchTerm);
   };
   const openModal = () => {
     setIsOpen(true);
@@ -120,13 +117,13 @@ const ProductContainer = () => {
       alert("삭제할 카테고리를 선택해주세요");
     }
   };
-  // const onModalClose = () => {};
+
   // 카테고리 데이터가 null일 수 있어서 return null 을 해주다가, 리턴 널 밑에 react hook이 존재해서 에러가 발생했음
   // Rendered more hooks than during the previous render. 에러
   if (!productData) {
     return null;
   }
-  console.log("products", products);
+
   return (
     <div>
       <Gnb />
@@ -141,17 +138,16 @@ const ProductContainer = () => {
         isAllCheck={isAllCheck}
         setIsAllCheck={setIsAllCheck}
         ref={checkRef}
+        isPending={isPending}
       />
       <ProductModal
         categoryData={categoryData}
         setProduct={setProducts}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
-        // onModalClose={onModalClose}
       />
     </div>
   );
 };
 
 export default ProductContainer;
-// 카테고리

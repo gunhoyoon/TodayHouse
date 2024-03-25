@@ -20,6 +20,10 @@ import { v4 as uuid } from "uuid";
 // useMutate는 클라반영만 해주기
 const categoryKey = "카테고리";
 const productKey = "상품";
+const delay = (ms: number) =>
+  new Promise((res) => {
+    setTimeout(res, ms);
+  });
 
 // 에러가 발생했을 때 또는 문제해결이 필요한 상황일 떄 큰틀부터 콘솔찍어보고 세분화하면서 범위 좁히기
 export const handlers = [
@@ -33,6 +37,7 @@ export const handlers = [
     });
   }),
   http.get("/api/admin/searchCategory", async ({ request }) => {
+    await delay(1500);
     const url = new URL(request.url);
     // console.log("url", url);
     const searchTerm = url?.searchParams.get("searchTerm");
@@ -163,10 +168,7 @@ export const handlers = [
 
   http.get("/api/admin/initProduct", async () => {
     const initData = localStorage.getItem(productKey) || "[]";
-    // const test = JSON.parse(initData);
-    // console.log(test);
-    // console.log(test[0].image);
-    // console.log("initData", JSON.parse(initData));
+
     return new Response(initData, {
       status: 200,
       headers: {
@@ -174,31 +176,38 @@ export const handlers = [
       },
     });
   }),
+
   http.get("/api/admin/searchProduct", async ({ request }) => {
+    await delay(2000);
     const url = new URL(request.url);
     console.log("url", url);
     const searchTerm = url?.searchParams.get("searchTerm");
     console.log("searchTerm", searchTerm);
-    // 검색어 가져오기
     const initData = localStorage.getItem(productKey) || "[]";
-    // 로컬엔 스트링 밖에 몬들억가니가 꺼내서 파싱하면서 타입 변환
-    let copyData: Product[] = JSON.parse(initData);
+    if (searchTerm) {
+      // 로컬엔 스트링 밖에 몬들억가니가 꺼내서 파싱하면서 타입 변환
+      let copyData: Product[] = JSON.parse(initData);
 
-    // const searchData = copyData
-    //   .map((product: Product) => product.name)
-    //   .includes(searchTerm as string);
-    // console.log("searchData", searchData);
-    const filteredProducts = copyData.filter((product: Product) =>
-      product.name.includes(searchTerm as string)
-    );
-    console.log(filteredProducts);
-    // return new Response(JSON.stringify(searchData), {
-    return new Response(JSON.stringify(filteredProducts), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      const filteredProducts = copyData.filter((product: Product) =>
+        product.name.includes(searchTerm as string)
+      );
+      // console.log(filteredProducts);
+      return new Response(JSON.stringify(filteredProducts), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      return new Response(initData, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // 검색어 가져오기
   }),
 
   http.post("/api/admin/product", async ({ request }) => {
@@ -260,9 +269,6 @@ export const handlers = [
         [imageFileName]: base64Image,
       },
     };
-
-    // id가 매번 달라질 수 있는데 이름을 뭘로 정의하지
-
     // image: {
     //   id: imageFileName, // 이미지 파일명을 저장
     // },
@@ -274,6 +280,7 @@ export const handlers = [
       status: 200,
     });
   }),
+
   http.delete("/api/admin/product", async ({ request }) => {
     const url = new URL(request.url);
     // console.log("url", url);

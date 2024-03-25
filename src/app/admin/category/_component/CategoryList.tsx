@@ -2,6 +2,7 @@
 import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 // import styles from "./categoryList.module.css";
 import { CategoryWithCheckId } from "@/model/Categories";
+import Loading from "../../_component/Loading";
 
 type Props = {
   setCategories: (categories: CategoryWithCheckId[]) => void;
@@ -9,11 +10,12 @@ type Props = {
   isAllCheck: boolean;
   setIsAllCheck: (isAllCheck: boolean) => void;
   ref: React.RefObject<HTMLInputElement>;
+  isPending: boolean;
 };
 
 const CategoryList = forwardRef(
   (
-    { setCategories, categories, setIsAllCheck, isAllCheck }: Props,
+    { setCategories, categories, setIsAllCheck, isAllCheck, isPending }: Props,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
     const toggleCheck = (index: number) => {
@@ -85,30 +87,36 @@ const CategoryList = forwardRef(
 
     return (
       <>
-        <input
-          id="allCheck"
-          type="checkbox"
-          ref={ref}
-          checked={isAllCheck}
-          onChange={onAllCheck}
-        />
-        <label htmlFor="allCheck">전체선택</label>
-        <ul>
-          {categories &&
-            categories.map((category, index) => (
-              <li key={index}>
-                <input
-                  id="category"
-                  type="checkbox"
-                  checked={category.checked}
-                  onChange={() => {
-                    toggleCheck(index);
-                  }}
-                />
-                <span>{category.name}</span>
-              </li>
-            ))}
-        </ul>
+        {isPending ? (
+          <Loading />
+        ) : (
+          <>
+            <input
+              id="allCheck"
+              type="checkbox"
+              ref={ref}
+              checked={isAllCheck}
+              onChange={onAllCheck}
+            />
+            <label htmlFor="allCheck">전체선택</label>
+            <ul>
+              {categories &&
+                categories.map((category, index) => (
+                  <li key={index}>
+                    <input
+                      id="category"
+                      type="checkbox"
+                      checked={category.checked}
+                      onChange={() => {
+                        toggleCheck(index);
+                      }}
+                    />
+                    <span>{category.name}</span>
+                  </li>
+                ))}
+            </ul>
+          </>
+        )}
       </>
     );
   }

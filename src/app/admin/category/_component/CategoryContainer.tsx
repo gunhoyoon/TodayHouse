@@ -9,7 +9,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CategoryModal from "./CategoryModal";
 
 import { InitCategoryData } from "@/app/_util/categoryData";
-import { delay } from "msw";
 
 const CategoryContainer = () => {
   const key = "카테고리";
@@ -35,8 +34,7 @@ const CategoryContainer = () => {
       console.log("data", data);
       const categoriesWithCheckId = data.map((category: Category) => ({
         ...category,
-        checked: false, // 기본적으로 모든 카테고리를 unchecked 상태로 설정합니다.
-        // 리스트마다 고유의 아이디가 있을텐데, checked가 true인 친구의 id를 delete로 보낸다?
+        checked: false,
       }));
       setCategories(categoriesWithCheckId);
       // 셋 업데이트 무한 루프 방지 useEffect
@@ -53,7 +51,7 @@ const CategoryContainer = () => {
   //   const debouncedKeyword = useDebounce(searchTerm, 500);
 
   // onSearch 이벤트 핸들러 내부에서 hook을 사용하지 못하는 규칙
-  const search = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (category: string) => {
       const searchTerm = category;
       console.log("searchTerm", searchTerm);
@@ -76,9 +74,8 @@ const CategoryContainer = () => {
         ...category,
         checked: false,
       }));
-      // console.log("searchData", searchData);
+
       setCategories(searchData);
-      // console.log("categories", categories);
       // 클라이언트에 적용해줄건 딱히 없음. 그냥 성공 메시지 정도, 아 아닌가 셋을 업데이트 해줘야하나
     },
     onError: () => {
@@ -87,7 +84,7 @@ const CategoryContainer = () => {
   });
 
   const onSearch = (searchTerm: string) => {
-    search.mutate(searchTerm);
+    mutate(searchTerm);
   };
 
   const remove = useMutation({
@@ -97,7 +94,7 @@ const CategoryContainer = () => {
       console.log("ids", ids);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/category?ids=${ids}`,
-        // 선택 삭제든 전체 삭제든 하나로 처리할거임, 데이터 타입은 동일
+
         {
           method: "DELETE",
         }
@@ -108,7 +105,6 @@ const CategoryContainer = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      // 로컬 데이터 변경 핸들러 내부에서 다 해주기
       alert("삭제 성공");
       queryClient.setQueryData(["admin", "category"], data);
       setIsAllCheck(false);
@@ -125,7 +121,7 @@ const CategoryContainer = () => {
     const selectDEL = categories.filter(
       (category: CategoryWithCheckId) => category.checked === true
     );
-    // 체크된 친구들 mutate에 전달
+
     if (selectDEL.length > 0) {
       remove.mutate(selectDEL);
     } else {
@@ -157,6 +153,7 @@ const CategoryContainer = () => {
         isAllCheck={isAllCheck}
         setIsAllCheck={setIsAllCheck}
         ref={checkRef}
+        isPending={isPending}
       />
       <CategoryModal isModal={isModal} onModalClose={onModalClose} />
     </>

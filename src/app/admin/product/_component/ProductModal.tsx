@@ -175,7 +175,8 @@ export default function ProductModal({
 
   const triggerFileInput = () => {
     if (fileRef.current) {
-      console.log(fileRef.current.click());
+      console.log("click");
+      fileRef.current.click();
       // undefined가 나와서 뭐가 잘못된건줄 알았는데, 그냥 껐다키니까 되네 ..
     }
   };
@@ -217,120 +218,125 @@ export default function ProductModal({
   return (
     <>
       {isOpen && (
-        <div className={styles.formContainer}>
-          <div className={styles.formHeader}>
-            <p>상품 추가하기</p>
-            <button type="button" onClick={onModalClose}>
-              ❌
-            </button>
-          </div>
-          <form onSubmit={onSubmit}>
-            <fieldset>
-              <legend></legend>
-              <div>
-                <label htmlFor="image">
-                  <div className={styles.imagePrevContainer}>
-                    {imagePreview ? (
-                      <>
+        <div className={styles.modalOverlay}>
+          <div className={styles.formContainer}>
+            <div className={styles.formHeader}>
+              <p>상품 추가하기</p>
+              <button type="button" onClick={onModalClose}>
+                ❌
+              </button>
+            </div>
+            <form onSubmit={onSubmit}>
+              <fieldset>
+                <legend></legend>
+                <div>
+                  <label htmlFor="image">
+                    <div className={styles.imagePrevContainer}>
+                      {imagePreview ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={prevDEL}
+                            className={styles.prevImgClose}
+                          >
+                            ❌
+                          </button>
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className={styles.imagePreview}
+                          />
+                        </>
+                      ) : (
                         <button
-                          style={{ marginLeft: 150 }}
-                          type="button"
-                          onClick={prevDEL}
-                        >
-                          ❌
-                        </button>
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className={styles.commonStyle}
-                        />
-                      </>
-                    ) : (
-                      <button
-                        onClick={triggerFileInput}
-                        type="button"
-                        style={{
-                          backgroundImage: `url(${defaultImage})`,
-                          // backgroundSize: "cover",
-                        }}
-                        className={styles.commonStyle}
-                      ></button>
-                    )}
+                          onClick={triggerFileInput}
+                          className={styles.imageUploadButton}
+                        ></button>
+                      )}
+                    </div>
+                  </label>
+                  <input
+                    id="imageUpload"
+                    type="file"
+                    name="image"
+                    ref={fileRef}
+                    className={styles.FileInput}
+                    onChange={handleImageChange}
+                  />
+                </div>
+                <div className={styles.inputContainer}>
+                  <div>
+                    <select
+                      name="category"
+                      className={styles.selectInput}
+                      id="category-select"
+                      onChange={onChangeHandler}
+                    >
+                      <option value="">선택하세요</option>
+                      {categoryData?.map((category: Category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                      {/* 로컬에서 클라이언트로 넘겨받고 checked까지 포함된 카테고리 데이터의 name과 id임, 이걸 그냥 상품 데이터에 추가만 해줌 */}
+                    </select>
                   </div>
-                </label>
-                <input
-                  id="imageUpload"
-                  type="file"
-                  name="image"
-                  ref={fileRef}
-                  style={{ display: "none" }}
-                  onChange={handleImageChange}
-                />
-              </div>
-              <div>
-                <select
-                  name="category"
-                  id="category-select"
-                  onChange={onChangeHandler}
-                >
-                  <option value="">선택하세요</option>
-                  {categoryData?.map((category: Category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                  {/* 로컬에서 클라이언트로 넘겨받고 checked까지 포함된 카테고리 데이터의 name과 id임, 이걸 그냥 상품 데이터에 추가만 해줌 */}
-                </select>
-              </div>
 
-              <div>
-                <label htmlFor="name">상품명</label>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  value={newProductData.name}
-                  onChange={(e) => {
-                    setNewProductData({
-                      ...newProductData,
-                      name: e.target.value,
-                    });
-                  }}
-                />
-              </div>
-              <div>
-                <label htmlFor="price">가격</label>
-                <input
-                  id="price"
-                  type="text"
-                  required
-                  value={newProductData.price}
-                  onChange={(e) => {
-                    setNewProductData({
-                      ...newProductData,
-                      price: e.target.value,
-                    });
-                  }}
-                />
-              </div>
-              <div>
-                <label htmlFor="description">상품 소개</label>
-                <input
-                  id="description"
-                  type="text"
-                  required
-                  value={newProductData.description}
-                  onChange={(e) => {
-                    setNewProductData({
-                      ...newProductData,
-                      description: e.target.value,
-                    });
-                  }}
-                />
-              </div>
-              <button type="submit">저장</button>
-            </fieldset>
-          </form>
+                  <div>
+                    <label htmlFor="name">상품명</label>
+                    <input
+                      id="name"
+                      type="text"
+                      className={styles.textInput}
+                      required
+                      value={newProductData.name}
+                      onChange={(e) => {
+                        setNewProductData({
+                          ...newProductData,
+                          name: e.target.value,
+                        });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="price">가격</label>
+                    <input
+                      id="price"
+                      type="text"
+                      className={styles.textInput}
+                      required
+                      value={newProductData.price}
+                      onChange={(e) => {
+                        setNewProductData({
+                          ...newProductData,
+                          price: e.target.value,
+                        });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="description">상품 소개</label>
+                    <input
+                      id="description"
+                      type="text"
+                      className={styles.textInput}
+                      required
+                      value={newProductData.description}
+                      onChange={(e) => {
+                        setNewProductData({
+                          ...newProductData,
+                          description: e.target.value,
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+                <button type="submit" className={styles.saveButton}>
+                  저장
+                </button>
+              </fieldset>
+            </form>
+          </div>
         </div>
       )}
     </>
