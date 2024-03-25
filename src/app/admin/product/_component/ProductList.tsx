@@ -114,25 +114,26 @@ const ProductList = forwardRef(
                     />
                     {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
                     <div>
-                      {Object.values(product.image)[0] ? (
-                        <img
-                          src={`data:image/png;base64,${
-                            Object.values(product.image)[0]
-                          }`}
-                          alt={product.name}
-                          width={200}
-                          height={200}
-                        />
-                      ) : (
-                        <img
-                          src={defaultImage}
-                          alt="이미지 없음"
-                          width={200}
-                          height={200}
-                        />
-                      )}
-
-                      <div>
+                      <div className={styles.productImage}>
+                        {Object.values(product.image)[0] ? (
+                          <img
+                            src={`data:image/png;base64,${
+                              Object.values(product.image)[0]
+                            }`}
+                            alt={product.name}
+                            width={200}
+                            height={200}
+                          />
+                        ) : (
+                          <img
+                            src={defaultImage}
+                            alt="이미지 없음"
+                            width={200}
+                            height={200}
+                          />
+                        )}
+                      </div>
+                      <div className={styles.productInfo}>
                         <p>카테고리 : {product.category.name}</p>
                         <p>상품명 : {product.name}</p>
                         <p>가격 : {product.price}</p>

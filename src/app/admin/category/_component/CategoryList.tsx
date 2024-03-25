@@ -3,7 +3,7 @@ import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 // import styles from "./categoryList.module.css";
 import { CategoryWithCheckId } from "@/model/Categories";
 import Loading from "../../_component/Loading";
-
+import styles from "./categoryList.module.css";
 type Props = {
   setCategories: (categories: CategoryWithCheckId[]) => void;
   categories: CategoryWithCheckId[];
@@ -86,7 +86,7 @@ const CategoryList = forwardRef(
     };
 
     return (
-      <>
+      <div className={styles.listContainer}>
         {isPending ? (
           <Loading />
         ) : (
@@ -94,30 +94,33 @@ const CategoryList = forwardRef(
             <input
               id="allCheck"
               type="checkbox"
+              className="custom-checkbox"
               ref={ref}
               checked={isAllCheck}
               onChange={onAllCheck}
             />
-            <label htmlFor="allCheck">전체선택</label>
-            <ul>
+            <label htmlFor="allCheck" className="label-allCheck">
+              전체선택
+            </label>
+            <ul className={styles.itemContainer}>
               {categories &&
                 categories.map((category, index) => (
                   <li key={index}>
                     <input
-                      id="category"
+                      id={`category${index}`}
                       type="checkbox"
                       checked={category.checked}
                       onChange={() => {
                         toggleCheck(index);
                       }}
                     />
-                    <span>{category.name}</span>
+                    <label htmlFor={`category${index}`}>{category.name}</label>
                   </li>
                 ))}
             </ul>
           </>
         )}
-      </>
+      </div>
     );
   }
 );
