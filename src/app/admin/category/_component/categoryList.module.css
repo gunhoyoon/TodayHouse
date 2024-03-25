@@ -1,14 +1,14 @@
 .listContainer {
   width: 1200px;
   margin: 0 auto;
-  font-family: "Noto Sans KR", sans-serif; /* 예시로 둥근 한글 폰트 사용 */
+  font-family: "Noto Sans KR", sans-serif;
 
-  color: #333; /* 따뜻한 텍스트 색상 */
+  color: #333;
   margin-top: 12px;
 }
 
 .custom-checkbox {
-  accent-color: #4b8b3b; /* 체크박스 색상을 UI 디자인에 맞게 조정 */
+  accent-color: #4b8b3b;
   margin-right: 10px;
 }
 
@@ -27,16 +27,16 @@
 /* 리스트 아이템 스타일 */
 .itemContainer li {
   padding: 10px;
-  border-bottom: 1px solid #ccc; /* 경계선 색상은 UI 디자인에 맞게 조정 */
+  border-bottom: 1px solid #ccc;
   display: flex;
   align-items: center;
   padding: 12px 20px;
   border-bottom: 1px solid #e1e1e1;
-  background-color: #fff; /* 각 항목 배경색 */
-  border-radius: 8px; /* 모서리 둥글게 */
-  margin-bottom: 10px; /* 항목 간 간격 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자 효과 */
-  transition: background-color 0.3s; /* 부드러운 색상 변화 효과 */
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s;
 }
 
 .itemContainer li label {

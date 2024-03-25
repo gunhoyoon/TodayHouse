@@ -1,20 +1,68 @@
-.modalContainer {
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
-  flex-direction: column;
-  width: 400px;
-  height: 400px;
-  border: 1px solid black;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.formContainer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  padding: 8px 12px;
+}
+.formHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+}
+.inputContainer input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
 }
 .modalHead {
   display: flex;
   justify-content: space-between;
 }
 
-.modalContainer button {
-  padding: 3px 6px;
+.saveButton {
+  display: block;
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: none;
+  background-color: #5c6bc0;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  width: calc(100% - 32px); /* Account for padding */
+  margin: 8px 16px; /* Same as the side padding of the container */
+}
+.saveButton:hover {
+  background-color: #3f51b5;
 }
 
-.modalBody {
-  display: flex;
-  align-items: center;
+.modalBody input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%; /* Ensure inputs take full width */
 }

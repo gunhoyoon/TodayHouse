@@ -91,24 +91,28 @@ const CategoryModal = ({ isModal, onModalClose }: Props) => {
   return (
     <>
       {isModal && (
-        <div className={styles.modalContainer}>
-          <div className={styles.modalHead}>
-            <div>카테고리</div>
-            <div>
-              <button onClick={onModalClose}>❌</button>
+        <div className={styles.modalOverlay}>
+          <div className={styles.formContainer}>
+            <div className={styles.formHeader}>
+              <p>카테고리 추가하기</p>
+              <button type="button" onClick={onModalClose}>
+                ❌
+              </button>
             </div>
-          </div>
-          <div className={styles.modalBody}>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={handleChange}
-                ref={inputRef}
-              />
+            <div className={styles.modalBody}>
+              <form onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={handleChange}
+                  ref={inputRef}
+                />
 
-              <button type="submit">카테고리 추가</button>
-            </form>
+                <button className={styles.saveButton} type="submit">
+                  카테고리 추가
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
