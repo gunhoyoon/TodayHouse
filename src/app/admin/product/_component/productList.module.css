@@ -6,10 +6,14 @@
 .productAllCheck {
   margin-bottom: 20px;
 }
+.productAllCheck label {
+  margin-left: 4px;
+}
 .itemContainer {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  gap: 5px;
   padding: 8px 12px;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -18,11 +22,11 @@
   background-color: #fff;
   border-radius: 8px;
   margin-bottom: 10px;
-  height: 347px;
+  min-height: 347px;
 }
 .itemContainer li {
   width: 290px;
-  height: 330px;
+  height: 370px;
 }
 .productImage {
   display: flex;
@@ -33,10 +37,45 @@
 .productInfo {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
-  padding: 6px 12px;
-  width: 200px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  background: #f9f9f9;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-family: "Helvetica Neue", sans-serif;
+}
+.productInfo p {
+  font-weight: 400;
+  color: #333333;
+  margin: 6px 0;
+  font-size: 16px;
+}
+
+.productImage img {
+  cursor: pointer;
+}
+
+.detail {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-0%);
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  width: 140px;
+  box-sizing: border-box;
+}
+
+.productInfo:hover .detail {
+  display: block;
 }

@@ -6,19 +6,11 @@
   color: #333;
   margin-top: 12px;
 }
-
-.custom-checkbox {
-  accent-color: #4b8b3b;
-  margin-right: 10px;
-}
-
-/* 전체선택 레이블 스타일 */
-.label-allCheck {
-  display: block;
+.allCheck {
+  display: inline-block;
   margin-bottom: 20px;
-  cursor: pointer;
+  margin-left: 4px;
 }
-
 .itemContainer {
   list-style: none;
   padding: 0;

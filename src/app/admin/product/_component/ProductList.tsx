@@ -2,6 +2,8 @@ import { Image, Product, ProductWithCheck } from "@/model/Products";
 import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
 import styles from "./productList.module.css";
 import Loading from "../../_component/Loading";
+import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 type Props = {
   products: ProductWithCheck[];
   setProducts: (products: ProductWithCheck[]) => void;
@@ -83,7 +85,7 @@ const ProductList = forwardRef(
     };
     const defaultImage =
       "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
-    console.log("products", products);
+
     return (
       <>
         {isPending ? (
@@ -116,28 +118,37 @@ const ProductList = forwardRef(
                     <div>
                       <div className={styles.productImage}>
                         {Object.values(product.image)[0] ? (
-                          <img
-                            src={`data:image/png;base64,${
-                              Object.values(product.image)[0]
-                            }`}
-                            alt={product.name}
-                            width={200}
-                            height={200}
-                          />
+                          <label htmlFor={`product-${index}`}>
+                            <img
+                              src={`data:image/png;base64,${
+                                Object.values(product.image)[0]
+                              }`}
+                              alt={product.name}
+                              width={200}
+                              height={200}
+                            />
+                          </label>
                         ) : (
-                          <img
-                            src={defaultImage}
-                            alt="이미지 없음"
-                            width={200}
-                            height={200}
-                          />
+                          <label htmlFor={`product-${index}`}>
+                            <img
+                              src={defaultImage}
+                              alt="이미지 없음"
+                              width={200}
+                              height={200}
+                            />
+                          </label>
                         )}
                       </div>
                       <div className={styles.productInfo}>
-                        <p>카테고리 : {product.category.name}</p>
-                        <p>상품명 : {product.name}</p>
-                        <p>가격 : {product.price}</p>
-                        <p>상품 소개 : {product.description}</p>
+                        <Link href={`/admin/product/${product.id}`}>
+                          <p>카테고리 : {product.category.name}</p>
+                          <p>상품명 : {product.name}</p>
+                          <p>가격 : {Number(product.price).toLocaleString()}</p>
+                          <p>상품 소개 : {product.description}</p>
+                          <div className={styles.detail}>
+                            {product.name} 상세 보기
+                          </div>
+                        </Link>
                       </div>
                     </div>
                   </li>

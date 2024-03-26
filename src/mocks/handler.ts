@@ -177,6 +177,23 @@ export const handlers = [
     });
   }),
 
+  http.get("/api/admin/product/:id", async ({ request, params }) => {
+    await delay(1000);
+    const { id } = params;
+    const rawData = localStorage.getItem(productKey) || "[]";
+    const initData: Product[] = JSON.parse(rawData);
+    const detailData = initData.filter((product: Product) => product.id === id);
+    if (detailData.length > 0) {
+      return new Response(JSON.stringify(detailData), {
+        status: 200,
+      });
+    } else {
+      return new Response(JSON.stringify({ message: "Product not found" }), {
+        status: 404, // 상품이 없는 경우 상태 코드 404와 함께 오류 메시지 반환
+      });
+    }
+  }),
+
   http.get("/api/admin/searchProduct", async ({ request }) => {
     await delay(2000);
     const url = new URL(request.url);

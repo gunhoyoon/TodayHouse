@@ -72,7 +72,6 @@ export default function ProductModal({
       return response.json();
     },
     onSuccess: (data) => {
-      // console.log("data", data);
       alert("추가성공");
       setNewProductData({
         category: {
@@ -95,7 +94,7 @@ export default function ProductModal({
       alert("추가실패");
     },
   });
-
+  console.log("newProductData", newProductData);
   const compressImage = (file: File) => {
     return new Promise((resolve, reject) => {
       new Compressor(file, {
@@ -198,6 +197,7 @@ export default function ProductModal({
     // console.log("aa", aa, bb);
 
     const categoryId = e.target.value; // 카테고리 id 반환
+    console.log("categoryId", categoryId);
     const selectedCategory = categoryData.find(
       (category) => category.id === categoryId
     );
@@ -209,10 +209,19 @@ export default function ProductModal({
           name: selectedCategory.name,
         },
       });
+    } else {
+      setNewProductData({
+        ...newProductData,
+        category: {
+          id: "",
+          name: "",
+        },
+      });
     }
-    // console.log("newProductData", newProductData.category);
+    //결국 선택해주세요 를 다시 선택할 경우 카테고리를 비워줘야함
   };
-  console.log("categoryData", categoryData);
+
+  // console.log("categoryData", categoryData);
   // image,category,name,price,description 중 category, image 제외한 나머지는 텍스트로 입력
   // 포스트 시 프로덕트 정보가 담긴 객체를 전달할거고, category는 selectOption으로 전달
   return (
@@ -250,6 +259,7 @@ export default function ProductModal({
                       ) : (
                         <button
                           onClick={triggerFileInput}
+                          type="button"
                           className={styles.imageUploadButton}
                         ></button>
                       )}

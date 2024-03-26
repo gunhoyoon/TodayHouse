@@ -94,12 +94,11 @@ const CategoryList = forwardRef(
             <input
               id="allCheck"
               type="checkbox"
-              className="custom-checkbox"
               ref={ref}
               checked={isAllCheck}
               onChange={onAllCheck}
             />
-            <label htmlFor="allCheck" className="label-allCheck">
+            <label htmlFor="allCheck" className={styles.allCheck}>
               전체선택
             </label>
             <ul className={styles.itemContainer}>
