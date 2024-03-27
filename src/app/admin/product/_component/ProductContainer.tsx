@@ -15,6 +15,10 @@ const ProductContainer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAllCheck, setIsAllCheck] = useState(false);
   const checkRef = useRef<HTMLInputElement>(null);
+  const [modifyProduct, setModifyProduct] = useState<ProductWithCheck | null>(
+    null
+  );
+
   const queryClient = useQueryClient();
 
   const { data: productData } = useQuery<Product[]>({
@@ -23,9 +27,6 @@ const ProductContainer = () => {
     staleTime: 60 * 1000,
     gcTime: 300 * 1000,
   });
-  if (productData) {
-    console.log("initialProducts", productData);
-  }
 
   const { data: categoryData = [] } = useQuery<Category[]>({
     queryKey: ["admin", "category"],
@@ -123,7 +124,11 @@ const ProductContainer = () => {
   if (!productData) {
     return null;
   }
-
+  useEffect(() => {
+    if (isOpen === false && modifyProduct) {
+      setModifyProduct(null);
+    }
+  }, [isOpen]);
   return (
     <div>
       <Gnb />
@@ -139,12 +144,18 @@ const ProductContainer = () => {
         setIsAllCheck={setIsAllCheck}
         ref={checkRef}
         isPending={isPending}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        modifyProduct={modifyProduct}
+        setModifyProduct={setModifyProduct}
       />
       <ProductModal
         categoryData={categoryData}
         setProduct={setProducts}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
+        modifyProduct={modifyProduct}
+        setModifyProduct={setModifyProduct}
       />
     </div>
   );

@@ -270,12 +270,6 @@ export const handlers = [
         break;
     }
 
-    // 여기서 현재 JSON 으로 들어오게 됨, 왜냐 formData엔 키-값 하나의 쌍만 담을 수 있는데,
-    // 현재 카테고리는 {id:string,name:string} 타입을 가지고 있으므로, JSON으로 변환해서 담았기 떄문ㅇ
-
-    // 확장자에 따른 처리 필요
-
-    // localStorage.setItem(imageFileName, JSON.stringify(base64Image));
     const productData: Product = {
       category: category,
       price: price,
@@ -292,6 +286,70 @@ export const handlers = [
     // 이미지 아디를 가지고 있음, 안쓰는 경우는 나눠놓은거임.
 
     initData.unshift(productData);
+    localStorage.setItem(productKey, JSON.stringify(initData));
+    return new Response(JSON.stringify(initData), {
+      status: 200,
+    });
+  }),
+  http.put("/api/admin/product/:id", async ({ request }) => {
+    const rawData = localStorage.getItem(productKey) || "[]";
+    const initData: Product[] = JSON.parse(rawData);
+    //아이템을 통째로,
+    const formData = await request.formData();
+    const name = formData.get("name") as string;
+    const base64Image = formData.get("image") as string;
+    const price = formData.get("price") as string;
+    const description = formData.get("description") as string;
+    const id = uuid();
+    const imageFileName = `${id}.png`;
+    const categoryData = formData.get("category");
+    const category = transformCategory(categoryData);
+    if (!category) {
+      return new Response(JSON.stringify("카테고리 파싱 실패"), {
+        status: 400, // 잘못된 요청
+      });
+    }
+
+    let mimeType = "image/png"; // 초기값으로 png MIME 타입 설정
+
+    // 파일명에서 확장자 추출
+    const extension = imageFileName.split(".").pop() as string;
+
+    // 확장자에 따른 MIME 타입 설정
+    switch (extension.toLowerCase()) {
+      case "jpg":
+      case "jpeg":
+        // 두 타입은 동일한 이미지 파일 형식을 나타낸다.
+        mimeType = "image/jpeg";
+        break;
+      case "png":
+        mimeType = "image/png";
+        break;
+      case "gif":
+        mimeType = "image/gif";
+        break;
+      // 추가적인 확장자에 대한 처리를 여기에 추가할 수 있습니다.
+      default:
+        // 처리할 수 없는 확장자인 경우 기본적으로 설정된 MIME 타입을 사용합니다.
+        break;
+    }
+
+    const productData: Product = {
+      category: category,
+      price: price,
+      description: description,
+      name: name,
+      id: id,
+      image: {
+        [imageFileName]: base64Image,
+      },
+    };
+    // image: {
+    //   id: imageFileName, // 이미지 파일명을 저장
+    // },
+    // 이미지 아디를 가지고 있음, 안쓰는 경우는 나눠놓은거임.
+
+    // initData.unshift(productData);
     localStorage.setItem(productKey, JSON.stringify(initData));
     return new Response(JSON.stringify(initData), {
       status: 200,

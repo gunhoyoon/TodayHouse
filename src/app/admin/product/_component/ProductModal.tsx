@@ -2,6 +2,7 @@
 import React, {
   ChangeEventHandler,
   FormEventHandler,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -17,7 +18,12 @@ type Props = {
   setIsOpen: (isOpen: boolean) => void;
   setProduct: (product: ProductWithCheck[]) => void;
   categoryData: Category[];
+  modifyProduct: ProductWithCheck | null;
+  setModifyProduct: React.Dispatch<
+    React.SetStateAction<ProductWithCheck | null>
+  >;
 };
+
 // 모달안에서만 모달이 닫히겠지
 const delay = (ms: number) =>
   new Promise((res) => {
@@ -26,10 +32,11 @@ const delay = (ms: number) =>
 
 export default function ProductModal({
   // onModalClose,
-  isOpen,
-  setProduct,
-  categoryData,
-  setIsOpen,
+  isOpen = false,
+  setProduct = () => {},
+  categoryData = [],
+  setIsOpen = () => {},
+  modifyProduct,
 }: Props) {
   //   const [category, setCategory] = useState("");
   //   const [name, setName] = useState("");
@@ -45,8 +52,10 @@ export default function ProductModal({
     price: "",
     description: "",
   });
+
   const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isModify, setIsModify] = useState(false);
   // console.log("newProductData.category", newProductData.category);
   const fileRef = useRef<HTMLInputElement>(null);
   const defaultImage =
@@ -94,7 +103,45 @@ export default function ProductModal({
       alert("추가실패");
     },
   });
-  console.log("newProductData", newProductData);
+  const PatchProductMutation = useMutation({
+    mutationFn: async (product: any) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/product/${product.id}`,
+        {
+          method: "PATCH",
+          body: product,
+        }
+        // 객채에 담아서 보내줌
+      );
+      if (!response.ok) {
+        throw new Error("Request failed with status " + response.status);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      alert("추가성공");
+      setNewProductData({
+        category: {
+          id: "",
+          name: "",
+        },
+        image: "",
+        name: "",
+        price: "",
+        description: "",
+      });
+
+      // 이미지 프리뷰도 초기화
+      setImagePreview(null);
+
+      queryClient.setQueryData(["admin", "product"], data);
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("추가실패");
+    },
+  });
+  // console.log("newProductData", newProductData);
   const compressImage = (file: File) => {
     return new Promise((resolve, reject) => {
       new Compressor(file, {
@@ -221,9 +268,20 @@ export default function ProductModal({
     //결국 선택해주세요 를 다시 선택할 경우 카테고리를 비워줘야함
   };
 
-  // console.log("categoryData", categoryData);
-  // image,category,name,price,description 중 category, image 제외한 나머지는 텍스트로 입력
-  // 포스트 시 프로덕트 정보가 담긴 객체를 전달할거고, category는 selectOption으로 전달
+  // if (!modifyProduct) {
+  //   console.log("데이터 없음");
+  // } else {
+  //   console.log("데이터 있음");
+  // }
+
+  useEffect(() => {
+    console.log("mount", modifyProduct);
+  }, [modifyProduct]);
+
+  useEffect(() => {
+    console.log("change", modifyProduct);
+  }, [modifyProduct]);
+  // modifyProduct
   return (
     <>
       {isOpen && (
@@ -274,6 +332,13 @@ export default function ProductModal({
                     onChange={handleImageChange}
                   />
                 </div>
+                <button
+                  onClick={() => {
+                    console.log(modifyProduct);
+                  }}
+                >
+                  asasd
+                </button>
                 <div className={styles.inputContainer}>
                   <div>
                     <select
@@ -284,7 +349,13 @@ export default function ProductModal({
                     >
                       <option value="">선택하세요</option>
                       {categoryData?.map((category: Category) => (
-                        <option key={category.id} value={category.id}>
+                        <option
+                          key={category.id}
+                          selected={
+                            category.name === modifyProduct?.category.name
+                          }
+                          value={category.id}
+                        >
                           {category.name}
                         </option>
                       ))}

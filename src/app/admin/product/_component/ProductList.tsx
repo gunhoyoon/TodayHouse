@@ -1,23 +1,46 @@
 import { Image, Product, ProductWithCheck } from "@/model/Products";
-import React, { ChangeEventHandler, ForwardedRef, forwardRef } from "react";
+import React, {
+  ChangeEventHandler,
+  ForwardedRef,
+  forwardRef,
+  useState,
+} from "react";
 import styles from "./productList.module.css";
 import Loading from "../../_component/Loading";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
+import ProductModal from "./ProductModal";
 type Props = {
   products: ProductWithCheck[];
+  modifyProduct: ProductWithCheck | null;
   setProducts: (products: ProductWithCheck[]) => void;
   isAllCheck: boolean;
+  setModifyProduct: React.Dispatch<
+    React.SetStateAction<ProductWithCheck | null>
+  >;
   setIsAllCheck: (isAllCheck: boolean) => void;
   ref: React.RefObject<HTMLInputElement>;
   isPending: boolean;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 };
 
 const ProductList = forwardRef(
   (
-    { products, setProducts, setIsAllCheck, isAllCheck, isPending }: Props,
+    {
+      products,
+      modifyProduct,
+      setProducts,
+      setIsAllCheck,
+      setModifyProduct,
+      isAllCheck,
+      isPending,
+      isOpen,
+      setIsOpen,
+    }: Props,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
+    // const [modifyProduct, setModifyProduct] = useState<ProductWithCheck>();
     const toggleCheck = (index: number) => {
       console.log(index);
       const updatedChecked = [...products];
@@ -86,6 +109,18 @@ const ProductList = forwardRef(
     const defaultImage =
       "https://iuc.cnu.ac.kr/_custom/cnu/resource/img/tmp_gallery.png";
 
+    const handleEditButtonClick = (productId: string) => {
+      console.log("productId", productId);
+      const productToModify = products.find(
+        (product: Product) => product.id === productId
+      ); // 클릭된 ID에 해당하는 상품 정보 찾기
+      console.log("productToModify", productToModify);
+      if (productToModify) {
+        setIsOpen(true);
+        setModifyProduct(productToModify);
+      }
+    };
+
     return (
       <>
         {isPending ? (
@@ -115,6 +150,9 @@ const ProductList = forwardRef(
                       }}
                     />
                     {/* checked 에 들어간 값이 어느순간 undefined나 null이 되면 에러가 발생 */}
+                    <button onClick={() => handleEditButtonClick(product.id)}>
+                      수정
+                    </button>
                     <div>
                       <div className={styles.productImage}>
                         {Object.values(product.image)[0] ? (
